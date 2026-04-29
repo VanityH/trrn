@@ -1,4 +1,4 @@
-import type { Component } from "trrn";
+import type { Ctx, RenderFn } from "trrn";
 import { Spinner } from "../components/Spinner.tsx";
 
 function simulateFetch(id: number): Promise<string> {
@@ -10,68 +10,55 @@ function simulateFetch(id: number): Promise<string> {
   });
 }
 
-export const AsyncPage: Component = (_props, ctx) => {
+export function AsyncPage(_: undefined, { update, onMount, onUnmount }: Ctx): RenderFn {
   let status = "idle" as "idle" | "loading" | "success" | "error";
   let data = "";
   let errorMsg = "";
   let fetchId = 1;
 
-  ctx.onUnmount(() => {
-    // Cancel pending fetch on unmount
-    fetchId = -1;
-  });
+  onUnmount(() => { fetchId = -1; });
 
   const load = () => {
     status = "loading";
     data = "";
     errorMsg = "";
     const id = fetchId;
-    ctx.update();
+    update();
 
     simulateFetch(id)
       .then((result) => {
-        if (id !== fetchId) return; // unmounted
+        if (id !== fetchId) return;
         data = result;
         status = "success";
-        ctx.update();
+        update();
       })
       .catch((err: Error) => {
         if (id !== fetchId) return;
         errorMsg = err.message;
         status = "error";
-        ctx.update();
+        update();
       });
   };
 
-  ctx.onMount(() => {
-    load();
-  });
+  onMount(load);
 
-  return (_p) => (
+  return () => (
     <div>
       <h2>Async Data Loading</h2>
       <p style="color: #666; font-size: 14px;">
-        Demonstrates: outer-scope async init, <code>ctx.onMount</code>,{" "}
-        <code>ctx.onUnmount</code> cancellation, loading/error/success states.
+        Demonstrates: <code>onMount</code> init, <code>onUnmount</code>{" "}
+        cancellation, loading/error/success states.
       </p>
 
       <div style="margin-top: 16px; padding: 16px; border: 1px solid #eee; border-radius: 8px; min-height: 80px;">
         {status === "loading" && <Spinner />}
-        {status === "success" && (
-          <div>
-            <p style="color: #16a34a;">{data}</p>
-          </div>
-        )}
-        {status === "error" && (
-          <div>
-            <p style="color: #dc2626;">Error: {errorMsg}</p>
-          </div>
-        )}
+        {status === "success" && <p style="color: #16a34a;">{data}</p>}
+        {status === "error" && <p style="color: #dc2626;">Error: {errorMsg}</p>}
         {status === "idle" && <p style="color: #999;">Click "Load" to start.</p>}
       </div>
 
       <button
-        onClick={() => load()}
+        onClick={load}
         disabled={status === "loading"}
         style={{
           marginTop: "12px",
@@ -87,4 +74,4 @@ export const AsyncPage: Component = (_props, ctx) => {
       </button>
     </div>
   );
-};
+}

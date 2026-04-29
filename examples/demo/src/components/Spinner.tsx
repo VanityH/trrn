@@ -1,6 +1,8 @@
-import type { Component } from "trrn";
+import type { RenderFn } from "trrn";
 
-export const Spinner: Component<{ text?: string }> = (props, _ctx) => {
+export function Spinner(
+  props: { text?: string } | undefined,
+): RenderFn {
   const text = props?.text ?? "Loading...";
   return () => <div class="spinner">{text}</div>;
-};
+}

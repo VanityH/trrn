@@ -1,4 +1,4 @@
-import type { Component } from "trrn";
+import type { Ctx, RenderFn } from "trrn";
 import { Nav } from "./components/Nav.tsx";
 import { HomePage } from "./pages/home.tsx";
 import { TodosPage } from "./pages/todos.tsx";
@@ -8,7 +8,7 @@ import { LifecyclePage } from "./pages/lifecycle.tsx";
 import { VanityPage } from "./pages/vanity.ts";
 import { BoundaryPage } from "./pages/boundary.tsx";
 
-const routes = [
+const routes: { path: string; Page: (...args: any[]) => RenderFn }[] = [
   { path: "/", Page: HomePage },
   { path: "/todos", Page: TodosPage },
   { path: "/async", Page: AsyncPage },
@@ -18,7 +18,10 @@ const routes = [
   { path: "/boundary", Page: BoundaryPage },
 ];
 
-export const App: Component = (_props, _ctx) => {
+export function App(
+  _props: Record<string, unknown> | undefined,
+  _ctx: Ctx,
+): RenderFn {
   return () => {
     const path = typeof location !== "undefined" ? location.pathname : "/";
     const match = routes.find((r) => r.path === path);
@@ -34,4 +37,4 @@ export const App: Component = (_props, _ctx) => {
       </div>
     );
   };
-};
+}

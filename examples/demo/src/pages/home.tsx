@@ -1,7 +1,10 @@
-import type { Component } from "trrn";
+import type { Ctx, RenderFn } from "trrn";
 import { Counter } from "../components/Counter.tsx";
 
-export const HomePage: Component = (_props, _ctx) => {
+export function HomePage(
+  _props: Record<string, unknown> | undefined,
+  _ctx: Ctx,
+): RenderFn {
   return () => (
     <div>
       <h2>Welcome to trrn</h2>
@@ -13,9 +16,9 @@ export const HomePage: Component = (_props, _ctx) => {
       <section style="margin-top: 24px;">
         <h3>Counter Demo</h3>
         <p style="color: #888; font-size: 14px;">
-          The counter below uses <code>action()</code> to auto-update after
-          each click. State is managed by closure variables — no useState
-          needed.
+          State is managed by closure variables. The component destructures{" "}
+          <code>{`{ update }`}</code> from ctx and uses the{" "}
+          <code>function</code> keyword.
         </p>
         <Counter />
         <div style="margin-top: 16px;">
@@ -31,12 +34,16 @@ export const HomePage: Component = (_props, _ctx) => {
             closure variables persist across renders
           </li>
           <li>
-            <strong>Explicit updates</strong> — call <code>ctx.update()</code>{" "}
-            to trigger re-render
+            <strong>Destructure ctx</strong> —{" "}
+            <code>{`{ update, onMount, onUnmount, consume }`}</code>
           </li>
           <li>
-            <strong>No defineComponent</strong> — components are plain
-            functions
+            <strong>Explicit updates</strong> — call <code>update()</code> to
+            trigger re-render, or <code>update({'newProps'})</code> to pass new
+            props
+          </li>
+          <li>
+            <strong>No defineComponent</strong> — components are plain functions
           </li>
           <li>
             <strong>Preact ecosystem</strong> — all Preact components work
@@ -46,4 +53,4 @@ export const HomePage: Component = (_props, _ctx) => {
       </section>
     </div>
   );
-};
+}

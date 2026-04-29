@@ -1,21 +1,29 @@
-import type { Component } from "trrn";
+import type { Ctx, RenderFn } from "trrn";
 import { ErrorBoundary } from "trrn";
-import { action } from "trrn";
 
-const Exploding: Component = (_props, _ctx) => {
+function Exploding(
+  _props: Record<string, unknown> | undefined,
+  _ctx: Ctx,
+): RenderFn {
   return () => {
     throw new Error("This component exploded!");
   };
-};
+}
 
-const Safe: Component = (_props, _ctx) => {
+function Safe(
+  _props: Record<string, unknown> | undefined,
+  _ctx: Ctx,
+): RenderFn {
   return () => <p>This is a safe component that renders normally.</p>;
-};
+}
 
-export const BoundaryPage: Component = (_props, ctx) => {
+export function BoundaryPage(
+  _props: Record<string, unknown> | undefined,
+  { update }: Ctx,
+): RenderFn {
   let showError = true;
 
-  return (_p) => (
+  return () => (
     <div>
       <h2>Error Boundary</h2>
       <p style="color: #666; font-size: 14px;">
@@ -25,9 +33,7 @@ export const BoundaryPage: Component = (_props, ctx) => {
 
       <div style="display: flex; gap: 8px; margin: 16px 0;">
         <button
-          onClick={action(ctx, () => {
-            showError = !showError;
-          })}
+          onClick={() => { showError = !showError; update(); }}
           style="padding: 6px 16px; cursor: pointer;"
         >
           {showError ? "Hide" : "Show"} Exploding Component
@@ -54,4 +60,4 @@ export const BoundaryPage: Component = (_props, ctx) => {
       </div>
     </div>
   );
-};
+}

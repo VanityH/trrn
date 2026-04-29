@@ -1,18 +1,18 @@
 /**
  * vanity-h 语法展示页面（唯一使用 vanity-h 的页面）
+ * 保持 function 关键字 + 解构风格
  */
-import type { Component } from "trrn";
-import { action } from "trrn";
+import type { Ctx, RenderFn } from "trrn";
 import createVanity from "vanity-h";
 import { h } from "trrn";
 
 const v = createVanity(h);
-const { div, span, button, h2, p, code, pre, section } = v;
+const { div, span, button, h2, p, pre, section } = v;
 
-export const VanityPage: Component = (_props, ctx) => {
+export function VanityPage(_: undefined, { update }: Ctx): RenderFn {
   let count = 0;
 
-  return (_p) =>
+  return () =>
     div.class("vanity-demo")(
       h2("vanity-h Syntax"),
 
@@ -31,21 +31,13 @@ export const VanityPage: Component = (_props, ctx) => {
             .style(
               "padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 6px;",
             )
-            .onClick(
-              action(ctx, () => {
-                count++;
-              }),
-            )("+"),
+            .onClick(() => { count++; update(); })("+"),
 
           button
             .style(
               "padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;",
             )
-            .onClick(
-              action(ctx, () => {
-                count--;
-              }),
-            )("-"),
+            .onClick(() => { count--; update(); })("-"),
         ),
       ),
 
@@ -58,33 +50,21 @@ export const VanityPage: Component = (_props, ctx) => {
           `// TSX (used in other pages):
 <div class="counter">
   <span>{count}</span>
-  <button onClick={handler}>+</button>
+  <button onClick={() => { count++; update(); }}>+</button>
 </div>
 
 // vanity-h chainable DSL (this page):
 div.class("counter")(
   span(String(count)),
-  button.onClick(handler)("+"),
+  button.onClick(() => { count++; update(); })("+"),
 )
 
 // Raw h() calls:
 h("div", { class: "counter" },
   h("span", null, String(count)),
-  h("button", { onClick: handler }, "+"),
+  h("button", { onClick: () => { count++; update(); } }, "+"),
 )`,
         ),
       ),
-
-      section.style("margin-top: 16px;")(
-        h2.style("font-size: 16px;")("Component Invocation"),
-
-        p.style("font-size: 14px; color: #666;")(
-          "trrn components are called via ",
-          code("$.prop()()"),
-          " or ",
-          code("v.x(Comp).prop()()"),
-          " syntax.",
-        ),
-      ),
     );
-};
+}

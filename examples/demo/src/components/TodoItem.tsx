@@ -1,15 +1,19 @@
-import type { Component } from "trrn";
+import type { RenderFn } from "trrn";
 
-export const TodoItem: Component<{
-  id: number;
-  text: string;
-  done: boolean;
-  onToggle: (id: number) => void;
-  onRemove: (id: number) => void;
-}> = (props, _ctx) => {
+export function TodoItem(
+  props:
+    | {
+        id: number;
+        text: string;
+        done: boolean;
+        onToggle: (id: number) => void;
+        onRemove: (id: number) => void;
+      }
+    | undefined,
+): RenderFn {
   const { id, text, done, onToggle, onRemove } = props ?? {};
 
-  return (_p) => (
+  return () => (
     <li class="todo-item" key={id}>
       <span
         onClick={() => onToggle?.(id!)}
@@ -26,4 +30,4 @@ export const TodoItem: Component<{
       </button>
     </li>
   );
-};
+}
