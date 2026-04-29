@@ -28,6 +28,12 @@ const Theme = createContext("light");
 const Counter: Component<{ initial?: number }> = (props, ctx) => {
   let count = props?.initial ?? 0;
 
+  console.log(ctx.consume(Theme), props);
+  /*
+    main.ts:32 light {initial: 10}
+    main.ts:32 light {initial: 0}
+    main.ts:32 light {initial: 5}
+  */
   return (_p) => {
     console.log(ctx.consume(Theme), _p);
     /*
