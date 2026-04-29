@@ -26,10 +26,7 @@ function makeContainer(): HTMLElement {
  * 包装事件处理器，执行后自动调用 ctx.update()。
  * 这是一个探索性的 API，减少样板代码。
  */
-function action<P extends unknown[]>(
-  ctx: Ctx,
-  fn: (...args: P) => void,
-): (...args: P) => void {
+function action<P extends unknown[]>(ctx: Ctx, fn: (...args: P) => void): (...args: P) => void {
   return (...args: P) => {
     fn(...args);
     ctx.update();
@@ -44,12 +41,16 @@ test("onClick 事件正常工作", async () => {
   const Comp: Component = (_props, ctx) => {
     let clicked = false;
     return (_p) =>
-      h("button", {
-        onClick: () => {
-          clicked = true;
-          ctx.update();
+      h(
+        "button",
+        {
+          onClick: () => {
+            clicked = true;
+            ctx.update();
+          },
         },
-      }, clicked ? "clicked" : "click me");
+        clicked ? "clicked" : "click me",
+      );
   };
 
   render(Comp, container);
@@ -108,17 +109,19 @@ test("onSubmit 事件：表单提交处理", async () => {
     };
 
     return (_p) =>
-      h("form", {
-        onSubmit: handleSubmit,
-      },
+      h(
+        "form",
+        {
+          onSubmit: handleSubmit,
+        },
         submitted
           ? h("span", null, "submitted")
           : h("input", {
-            value,
-            onInput: (e: Event) => {
-              value = (e.target as HTMLInputElement).value;
-            },
-          }),
+              value,
+              onInput: (e: Event) => {
+                value = (e.target as HTMLInputElement).value;
+              },
+            }),
       );
   };
 
@@ -127,9 +130,9 @@ test("onSubmit 事件：表单提交处理", async () => {
   expect(container.querySelector("form")).toBeTruthy();
   expect(container.querySelector("span")).toBeNull();
 
-  container.querySelector("form")!.dispatchEvent(
-    new Event("submit", { bubbles: true, cancelable: true }),
-  );
+  container
+    .querySelector("form")!
+    .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await tick();
 
   expect(container.querySelector("span")?.textContent).toBe("submitted");
@@ -145,11 +148,15 @@ test("action() 包装事件处理器，执行后自动更新", async () => {
   const Counter: Component = (_props, ctx) => {
     let count = 0;
     return (_p) =>
-      h("button", {
-        onClick: action(ctx, () => {
-          count++;
-        }),
-      }, String(count));
+      h(
+        "button",
+        {
+          onClick: action(ctx, () => {
+            count++;
+          }),
+        },
+        String(count),
+      );
   };
 
   render(Counter, container);
@@ -175,14 +182,20 @@ test("action() 在一次事件中修改多个变量然后统一更新", async ()
     let a = 0;
     let b = 0;
     return (_p) =>
-      h("div", null,
+      h(
+        "div",
+        null,
         h("span", { class: "sum" }, String(a + b)),
-        h("button", {
-          onClick: action(ctx, () => {
-            a++;
-            b += 2;
-          }),
-        }, "inc"),
+        h(
+          "button",
+          {
+            onClick: action(ctx, () => {
+              a++;
+              b += 2;
+            }),
+          },
+          "inc",
+        ),
       );
   };
 
@@ -212,8 +225,7 @@ test("通过回调 ref 访问 DOM 元素", () => {
   };
 
   const Comp: Component = (_props, _ctx) => {
-    return (_p) =>
-      h("div", { ref: setRef as any }, "ref-test");
+    return (_p) => h("div", { ref: setRef as any }, "ref-test");
   };
 
   render(Comp, container);

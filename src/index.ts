@@ -9,9 +9,7 @@ export interface Ctx {
   onUnmount(fn: () => void): void;
 }
 
-export type RenderFn<P = Record<string, unknown>> = (
-  props: P | undefined,
-) => ComponentChildren;
+export type RenderFn<P = Record<string, unknown>> = (props: P | undefined) => ComponentChildren;
 
 export type Component<P = Record<string, unknown>> = (
   props: P | undefined,

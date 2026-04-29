@@ -60,12 +60,16 @@ test("ctx.update() 触发重渲染，闭包状态保持", async () => {
 
     return (_props) => {
       renderCalls.push(count);
-      return h("button", {
-        onClick: () => {
-          count++;
-          ctx.update();
+      return h(
+        "button",
+        {
+          onClick: () => {
+            count++;
+            ctx.update();
+          },
         },
-      }, String(count));
+        String(count),
+      );
     };
   };
 
@@ -101,14 +105,18 @@ test("连续多次 ctx.update()，最终状态正确", async () => {
   const Counter: Component = (_props, ctx) => {
     let count = 0;
     return (_props) => {
-      return h("button", {
-        onClick: () => {
-          count++;
-          ctx.update();
-          count++;
-          ctx.update();
+      return h(
+        "button",
+        {
+          onClick: () => {
+            count++;
+            ctx.update();
+            count++;
+            ctx.update();
+          },
         },
-      }, String(count));
+        String(count),
+      );
     };
   };
 
@@ -132,12 +140,16 @@ test("多个组件实例的状态彼此独立", async () => {
   const Counter: Component = (_props, ctx) => {
     let count = 0;
     return (_props) => {
-      return h("button", {
-        onClick: () => {
-          count++;
-          ctx.update();
+      return h(
+        "button",
+        {
+          onClick: () => {
+            count++;
+            ctx.update();
+          },
         },
-      }, String(count));
+        String(count),
+      );
     };
   };
 

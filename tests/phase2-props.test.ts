@@ -28,7 +28,7 @@ test("初始 props 传给外层函数", () => {
 
   const Comp: Component<{ name: string }> = (props, _ctx) => {
     outerProps = props;
-    return (_props) => h("div", null, _props?.name as string ?? "none");
+    return (_props) => h("div", null, (_props?.name as string) ?? "none");
   };
 
   render(Comp, container, { name: "trrn" });
@@ -73,9 +73,13 @@ test("ctx.update(newProps) 传递新 props 给 render 函数", async () => {
   const Comp: Component<{ name: string }> = (_props, ctx) => {
     return (p) => {
       renderPropsLog.push(p);
-      return h("button", {
-        onClick: () => ctx.update({ name: "updated" }),
-      }, (p?.name as string) ?? "no-name");
+      return h(
+        "button",
+        {
+          onClick: () => ctx.update({ name: "updated" }),
+        },
+        (p?.name as string) ?? "no-name",
+      );
     };
   };
 
@@ -103,12 +107,16 @@ test("ctx.update() 无参数时 props 保持上次的值", async () => {
     let counter = 0;
     return (p) => {
       renderPropsLog.push({ ...p, counter });
-      return h("button", {
-        onClick: () => {
-          counter++;
-          ctx.update(); // 不传 props
+      return h(
+        "button",
+        {
+          onClick: () => {
+            counter++;
+            ctx.update(); // 不传 props
+          },
         },
-      }, `${p?.label ?? "?"}:${counter}`);
+        `${p?.label ?? "?"}:${counter}`,
+      );
     };
   };
 

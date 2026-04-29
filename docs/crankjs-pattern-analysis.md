@@ -38,14 +38,14 @@ function Comp() {
 
 ### 3.2 核心对比
 
-| 维度 | Crank.js 生成器 | 用户的高阶函数模式 |
-|------|----------------|-------------------|
-| 状态保持 | 生成器闭包 | 外层函数闭包 |
-| 更新触发 | `this.refresh()` | 手动调用 `update()` |
-| 多阶段逻辑 | 多个 `yield` | 单次 `render` 需条件分支 |
-| 清理逻辑 | `finally` 块 | 需外部 `onUnmount` |
-| 异步支持 | `async` 组件 | 返回 `async` render 函数 |
-| Props 更新 | `for ({...} of this)` | `render(newProps)` |
+| 维度       | Crank.js 生成器       | 用户的高阶函数模式       |
+| ---------- | --------------------- | ------------------------ |
+| 状态保持   | 生成器闭包            | 外层函数闭包             |
+| 更新触发   | `this.refresh()`      | 手动调用 `update()`      |
+| 多阶段逻辑 | 多个 `yield`          | 单次 `render` 需条件分支 |
+| 清理逻辑   | `finally` 块          | 需外部 `onUnmount`       |
+| 异步支持   | `async` 组件          | 返回 `async` render 函数 |
+| Props 更新 | `for ({...} of this)` | `render(newProps)`       |
 
 ### 3.3 关于 `for({} of this)` 的讨论
 
@@ -72,6 +72,7 @@ Crank.js 中 `for({} of this)` 用于接收新 props。用户确认 `render` 函
 用户明确：**不动 Preact 源码**，做二次封装或插件，保持 Preact 生态和版本可升级。
 
 实现思路：
+
 - 利用 Preact 的 `options` 钩子拦截 VNode
 - 或者使用适配器组件（包装组件）将高阶组件转换为标准 Preact 组件
 - 示例基于 `hof` 工厂函数，内部使用类组件的 `forceUpdate` 或函数组件的 `useState`

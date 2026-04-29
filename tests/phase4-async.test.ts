@@ -29,7 +29,7 @@ test("外层启动异步操作，完成后 ctx.update() 触发更新", async () 
     let data = "loading...";
 
     // 模拟异步数据获取
-    Promise.resolve().then(() => {
+    void Promise.resolve().then(() => {
       data = "loaded";
       ctx.update();
     });
@@ -62,7 +62,7 @@ test("模拟数据加载：loading → 数据到达 → 渲染", async () => {
 
     // 模拟 fetch
     const id = props?.id ?? 0;
-    wait(10).then(() => {
+    void wait(10).then(() => {
       result = `data-for-${id}`;
       status = "done";
       ctx.update();
@@ -96,7 +96,7 @@ test("快速多次 ctx.update() 只触发最终渲染", async () => {
     let data = "";
 
     // 模拟快速多次数据到达
-    Promise.resolve().then(() => {
+    void Promise.resolve().then(() => {
       data = "first";
       ctx.update();
       data = "second";
