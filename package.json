@@ -1,21 +1,23 @@
 {
   "name": "trrn",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
-  "homepage": "https://github.com/author/library#readme",
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
-  },
+  "description": "Closure-based frontend framework on Preact. No useState, no hooks — just functions and closures.",
+  "keywords": [
+    "closure",
+    "components",
+    "framework",
+    "functional",
+    "hyperscript",
+    "preact",
+    "ui"
+  ],
   "license": "MIT",
-  "author": "Author Name <author.name@mail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
+  "author": "",
   "files": [
     "dist"
   ],
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./dist/index.mjs",
     "./package.json": "./package.json"
@@ -24,7 +26,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack src/index.ts src/jsx-runtime.ts",
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",

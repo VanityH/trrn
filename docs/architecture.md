@@ -1,29 +1,23 @@
 # trrn 架构设计
 
-## 核心理念
+> 基于 Preact 11 beta 的闭包状态前端框架。无 `useState`，无 `defineComponent`。
 
-- **无 `defineComponent`**：组件就是普通函数，不需要工厂函数包装
-- **闭包即状态**：外层函数执行一次，闭包持有全部状态
-- **返回 render 函数**：每次渲染调用 render 函数生成 VNode
-- **基于 Preact**：适配层桥接到 Preact 运行时，不修改 Preact 源码
-
-## 用户组件形态
+## 组件模式
 
 ```ts
 function Comp(props, ctx) {
-  // === 初始化区 ===
-  // 这里的代码只执行一次
-  // 闭包变量天然就是"状态"，不需要 useState
-  let count = 0;
+  let count = 0; // 闭包 = 状态
 
+  ctx.onMount(() => {
+    /* DOM 就绪 */
+  });
   ctx.onUnmount(() => {
-    console.log("cleanup");
+    /* 清理 */
   });
 
-  // === 返回 render 函数 ===
   return (props) => {
-    // 每次渲染都执行（包括首次）
-    // props 首次与外部参数一致
+    // 每次渲染调用
+    const theme = ctx.consume(ThemeCtx);
     return h(
       "div",
       null,
@@ -33,7 +27,7 @@ function Comp(props, ctx) {
         {
           onClick: () => {
             count++;
-            ctx.update(); // 触发重渲染
+            ctx.update();
           },
         },
         "+",
@@ -43,119 +37,126 @@ function Comp(props, ctx) {
 }
 ```
 
-## 框架 API
+## API
 
-### `render(Comp, container, initialProps?)`
+### 框架入口
 
-入口函数，将组件挂载到 DOM。
+| 导出                              | 说明                               |
+| --------------------------------- | ---------------------------------- |
+| `render(Comp, container, props?)` | 挂载组件到 DOM                     |
+| `h(type, props, ...children)`     | 创建 VNode（泛型重载）             |
+| `action(ctx, fn)`                 | 事件处理自动 update                |
+| `createContext(defaultValue)`     | 创建 Context                       |
+| `ErrorBoundary`                   | 错误边界（Preact class component） |
+| `StrictMode`                      | 开发辅助（double-invoke render）   |
+| `TRRN_MARKER`                     | 显式组件标记 Symbol                |
 
-```
-render(Counter, document.getElementById('app'));
-```
+### ctx 对象
 
-### `h(type, props, ...children)`
+| 方法                 | 说明            |
+| -------------------- | --------------- |
+| `ctx.update(props?)` | 触发重渲染      |
+| `ctx.onMount(fn)`    | DOM 挂载后回调  |
+| `ctx.onUnmount(fn)`  | 卸载清理        |
+| `ctx.consume(ctx)`   | 读取 Context 值 |
 
-封装 Preact 的 `h`，创建 VNode。对函数类型自动检测并适配（支持 trrn 组件和标准 Preact 组件）。
+### Context
 
-### `ctx` 对象
+```ts
+const Theme = createContext("light");
 
-| 方法                    | 说明                         |
-| ----------------------- | ---------------------------- |
-| `ctx.update(newProps?)` | 触发重渲染，可选传递新 props |
-| `ctx.onUnmount(fn)`     | 注册卸载时的清理回调         |
+// Provider（通过 vanity-h $. 语法或 h() 使用）
+Theme.Provider.$.value("dark")(Child.$());
 
-## 内部适配原理
-
-```
-render(Comp, container)
-  │
-  ▼
-getAdapter(Comp) — WeakMap 缓存适配器
-  │
-  ▼
-createAutoAdapter(Comp)
-  │
-  ├── 首次渲染: 调用 Comp(props, ctx)
-  │   ├── 返回 function → trrn 模式（存储 renderFn）
-  │   └── 返回 VNode → 标准 Preact 组件（委托原生渲染）
-  │
-  ├── trrn 模式:
-  │   ├── useState 提供 forceUpdate（ctx.update 触发）
-  │   ├── useRef 持有: renderFn, propsRef, cleanupRef
-  │   ├── useEffect 注册清理（ctx.onUnmount 收集的回调）
-  │   └── 每次渲染: renderFn(currentProps) → VNode
-  │
-  └── 标准模式:
-      └── preactH(type, currentProps) → VNode（原生 Preact 渲染）
+// Consumer
+const theme = ctx.consume(Theme);
 ```
 
-### 子组件嵌套
+### 工具类型
 
-当 `h(Child, props)` 遇到函数类型时：
+| 类型                | 说明               |
+| ------------------- | ------------------ |
+| `Component<P>`      | 组件类型           |
+| `Ctx`               | 上下文类型         |
+| `RenderFn<P>`       | render 函数类型    |
+| `PropsOf<T>`        | 提取 Props         |
+| `RenderResultOf<T>` | 提取 render 返回值 |
 
-1. 检查 `adapterCache`（WeakMap）
-2. 若未缓存 → `createAutoAdapter(Child)` 创建适配器 → 缓存
-3. 将适配器作为 Preact 组件渲染
-4. 适配器首次渲染时自动检测 Child 的模式
-
-这实现了**无需 `defineComponent` 的自动适配**。
-
-## 可行性验证结论
-
-### ✅ 已验证可行的特性
-
-| 特性       | 状态 | 关键发现                                             |
-| ---------- | ---- | ---------------------------------------------------- |
-| 基础渲染   | ✅   | 外层执行一次，render 执行首次渲染                    |
-| 状态更新   | ✅   | `ctx.update()` 触发重渲染，闭包状态正确保持          |
-| Props 传递 | ✅   | 初始 props 传入外层，`update(newProps)` 更新         |
-| 组件嵌套   | ✅   | trrn 组件可嵌套，子组件状态独立                      |
-| 异步数据   | ✅   | 外层 async init + `ctx.update()` 模式完全可用        |
-| 事件处理   | ✅   | onClick/onInput/onSubmit 均正常，`action()` 减少样板 |
-| 列表渲染   | ✅   | 数组子元素 + key 正常                                |
-| 条件渲染   | ✅   | null/VNode 切换正常                                  |
-| 多实例     | ✅   | 各实例状态独立                                       |
-| 卸载安全   | ✅   | 卸载后 `ctx.update()` 是 no-op                       |
-
-### ⚠️ 需要注意的限制
-
-| 限制                   | 说明                                                                             |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| Async render 函数      | 直接返回 `Promise<VNode>` 不可行（Preact 不支持），推荐外层异步 + `ctx.update()` |
-| Props 标准化           | Preact 将 `null`/`undefined` props 标准化为 `{}`，解构默认值行为不变             |
-| useEffect cleanup 时序 | 依赖 Preact 的异步调度（RAF + setTimeout），在测试中需 `vi.useFakeTimers()`      |
-
-### 🔮 未来探索方向
-
-1. **`action()` helper** — 已在 Phase 5 原型验证，可集成到框架 API
-2. **错误边界** — 复用 Preact 的 `componentDidCatch` / `useErrorBoundary`
-3. **生态桥接** — `toPreact()` / `fromPreact()` 适配器
-4. **Async render 增强** — 适配器层面拦截 Promise 返回，自动 await + update
-5. **DevTools** — 利用 Preact DevTools 的前提是适配器透明化
-
-## 项目文件结构
+## 内部架构
 
 ```
 src/
-  index.ts        — 框架核心（render, h, Ctx, Component 类型）
-
-tests/
-  index.test.ts              — 占位
-  phase1-basic.test.ts       — 基础渲染 + update + onUnmount
-  phase2-props.test.ts       — Props 传递与更新
-  phase3-nesting.test.ts     — 组件嵌套与组合
-  phase4-async.test.ts       — 异步数据加载
-  phase5-h-events.test.ts    — 事件处理 + action() 原型
-  phase6-edgecases.test.ts   — 边界情况与错误处理
-
-docs/
-  architecture.md                 — 本文档
-  crankjs-pattern-analysis.md     — 对话总结与设计背景
+  index.ts          — barrel exports
+  types.ts          — Ctx, RenderFn, Component, Context, utility types
+  adapter.ts        — 适配器（createTrrnAdapter, getAdapter, pattern detection）
+                      + dev warnings + error wrapping + display name
+  h.ts              — h() 泛型重载（trrn 组件 / HTML / Preact 组件）
+  render.ts         — render() 根挂载
+  action.ts         — action() helper
+  context.ts        — createContext + resolveContext + createConsume
+  error-boundary.ts — ErrorBoundary（Preact class component）
+  warnings.ts       — dev warning（update-during-render, unmounted-update）
+  strict-mode.ts    — StrictMode（double-invoke render）
 ```
 
-## 计划修正策略
+### 适配器流程
 
-- 每个 Phase 完成后评估：API 是否自然？是否有未预见的限制？
-- 遇到 Preact 限制时：优先探索 `options` 钩子，其次考虑内部架构调整
-- 保持每个 Phase 可独立运行和测试
-- 发现更好的模式时回写更新本文档
+```
+h(Component, props, children)
+  │
+  ▼
+getAdapter(Component)
+  ├── 有缓存 → 返回缓存的 Adapter
+  └── 无缓存
+      ├── isTrrnComponent(Component)?
+      │   ├── 显式 TRRN_MARKER → 按标记
+      │   ├── length >= 2 → trrn（组件接收 props + ctx）
+      │   └── length < 2 → Preact（组件只接收 props）
+      ├── trrn → createTrrnAdapter(Component)
+      │          ├── useState → tick (forceUpdate)
+      │          ├── useRef → renderFn, propsRef, cleanupRef, internalRef
+      │          ├── useEffect → onMount, onUnmount
+      │          ├── resolveContext → 预收集 context 值
+      │          └── renderingRef → 跟踪渲染阶段（warnings）
+      └── Preact → PreactPassthrough(Component)
+                   └── preactH(Component, props)
+```
+
+### Props 同步机制
+
+- 父子 re-render：`propsRef.current = props`（同步外部 props）
+- ctx.update()：设置 `internalRef = true`，跳过同步，使用更新后的 props
+- 避免 `ctx.update()` 覆盖父组件传入的新 props
+
+## 测试
+
+```
+tests/  (9 files, 45 tests)
+  index.test.ts          — placeholder
+  phase1-basic.test.ts   — render + update + onUnmount
+  phase2-props.test.ts   — Props 传递与更新
+  phase3-nesting.test.ts — 组件嵌套
+  phase4-async.test.ts   — 异步数据加载
+  phase5-h-events.test.ts— 事件处理 + action() 原型
+  phase6-edgecases.test.ts— 边界情况
+  phase7-lifecycle.test.ts— action + onMount + onUnmount
+  phase9-api-integration.test.ts — Context + 深层嵌套 + 表单
+```
+
+## 设计决策
+
+1. **无 `defineComponent`** — 组件是普通函数，通过 `length >= 2` 或 `TRRN_MARKER` 识别
+2. **闭包即状态** — 外层函数执行一次，闭包变量天然持久化
+3. **显式更新** — `ctx.update()` 触发渲染，无隐式依赖追踪
+4. **基于 Preact** — 适配层 < 200 行，不修改 Preact 源码
+5. **自动适配标准 Preact 组件** — 非 trrn 组件通过 `PreactPassthrough` 原生渲染
+6. **WeakMap 适配器缓存** — 按函数引用缓存，避免重复创建
+
+## 已知限制
+
+| 限制               | 说明                                                               |
+| ------------------ | ------------------------------------------------------------------ |
+| Async render 函数  | 不直接支持 `async (props) => VNode`，推荐外层异步 + `ctx.update()` |
+| ErrorBoundary 测试 | Preact 11 beta 在 jsdom 中 componentDidCatch 不可用                |
+| useEffect 测试     | 需要 `setTimeout(r, 60)` 等待 Preact 的 RAF 调度                   |
+| Props 标准化       | Preact 将 null props 转为 `{}`，解构默认值行为不变                 |
