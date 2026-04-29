@@ -31,7 +31,8 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "preact": "11.0.0-beta.1"
+    "preact": "11.0.0-beta.1",
+    "vanity-h": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

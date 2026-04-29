@@ -15,6 +15,9 @@ importers:
       preact:
         specifier: 11.0.0-beta.1
         version: 11.0.0-beta.1
+      vanity-h:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
@@ -1016,6 +1019,9 @@ packages:
     resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
     engines: {node: '>=20.18.1'}
 
+  vanity-h@1.1.0:
+    resolution: {integrity: sha512-XeBzydz7FafUM8Pt2G82LUuiAXvWwFgdi6vudGVIkReY0LhoLXuId97e3D9CkoAfeUi77TTprFWAfTClRROR1A==}
+
   vite-plus@0.1.19:
     resolution: {integrity: sha512-QWuTqkO/a8Q7I3hHnYdvwlJa7mcc6hgh99/8CHoRb27pgo+z1ux+NGYYCZPJHKVtatAtVRaQQvy4cEQBHyB87A==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1821,6 +1827,8 @@ snapshots:
   undici-types@7.19.2: {}
 
   undici@7.25.0: {}
+
+  vanity-h@1.1.0: {}
 
   vite-plus@0.1.19(@types/node@25.6.0)(jiti@2.6.1)(jsdom@29.1.0)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(jiti@2.6.1)(yaml@2.8.3))(yaml@2.8.3):
     dependencies:
