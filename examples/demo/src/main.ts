@@ -28,19 +28,8 @@ const Theme = createContext("light");
 const Counter: Component<{ initial?: number }> = (props, ctx) => {
   let count = props?.initial ?? 0;
 
-  console.log(ctx.consume(Theme), props);
-  /*
-    main.ts:32 light {initial: 10}
-    main.ts:32 light {initial: 0}
-    main.ts:32 light {initial: 5}
-  */
   return (_p) => {
     console.log(ctx.consume(Theme), _p);
-    /*
-      main.ts:32 light {initial: 10}
-      main.ts:32 light {initial: 0}
-      main.ts:32 light {initial: 5}
-    */
 
     return div.class("counter")(
       h2.class("counter-value")(String(count)),
@@ -130,7 +119,7 @@ const App: Component = (_props, _ctx) => {
         p.style("color: #666")("trrn 闭包组件 + vanity-h 链式 DSL — 无需 JSX，无需 useState"),
       ),
 
-      Theme.Provider.$.value("dark")(Counter.$()), // 这里不会渲染子元素
+      Theme.Provider.$.value("dark")(Counter.$.initial(20)()),
 
       main(
         // v.x<Props>() 泛型方式调用 Counter，支持类型推断
