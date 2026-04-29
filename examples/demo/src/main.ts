@@ -1,8 +1,7 @@
-import { render, h } from "../../../src/index.ts";
-import type { Component } from "../../../src/index.ts";
+import { render, h, createContext } from "trrn";
+import type { Component } from "trrn";
 import createVanity from "vanity-h";
 
-// createVanity 只能调用一次（会设置 Object.prototype.$）
 const {
   div,
   span,
@@ -22,14 +21,24 @@ const {
   input,
 } = createVanity(h);
 
+const Theme = createContext("light");
+
 // ── Counter 组件 ──
 
 const Counter: Component<{ initial?: number }> = (props, ctx) => {
   let count = props?.initial ?? 0;
 
-  return (_p) =>
-    div.class("counter")(
+  return (_p) => {
+    console.log(ctx.consume(Theme), _p);
+    /*
+      main.ts:32 light {initial: 10}
+      main.ts:32 light {initial: 0}
+      main.ts:32 light {initial: 5}
+    */
+
+    return div.class("counter")(
       h2.class("counter-value")(String(count)),
+
       div.class("counter-actions")(
         button.class("btn btn-inc").onClick(() => {
           count++;
@@ -45,6 +54,7 @@ const Counter: Component<{ initial?: number }> = (props, ctx) => {
         })("Reset"),
       ),
     );
+  };
 };
 
 // ── Todo 组件 ──
@@ -113,6 +123,8 @@ const App: Component = (_props, _ctx) => {
         h1("trrn × Vanity-H Demo"),
         p.style("color: #666")("trrn 闭包组件 + vanity-h 链式 DSL — 无需 JSX，无需 useState"),
       ),
+
+      // Theme.Provider.$(Counter.$()),
 
       main(
         // v.x<Props>() 泛型方式调用 Counter，支持类型推断
