@@ -2,10 +2,14 @@ import { h as preactH } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
 import type { Ctx, RenderFn } from "./types.ts";
 import { TRRN_MARKER } from "./types.ts";
+import { createConsume, registeredContexts, resolveContext } from "./context.ts";
 
 // ── Adapter cache ─────────────────────────────────────────────
 
-const adapterCache = new WeakMap<object, Function>();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFunction = (...args: any[]) => any;
+
+const adapterCache = new WeakMap<object, AnyFunction>();
 
 // ── Pattern detection ─────────────────────────────────────────
 
@@ -13,10 +17,9 @@ const adapterCache = new WeakMap<object, Function>();
  * 判断一个函数是否为 trrn 组件。
  * 优先级：(1) Symbol 标记 (2) 参数数量启发式 (props+ctx=2)
  */
-function isTrrnComponent(type: Function): boolean {
-  const marker = (type as any)[TRRN_MARKER];
-  // 显式 false → 非 trrn；显式 true → trrn；未标记 → 参数数量启发式
-  if (marker !== undefined) return marker;
+function isTrrnComponent(type: AnyFunction): boolean {
+  const marker = (type as unknown as Record<string | symbol, unknown>)[TRRN_MARKER];
+  if (marker !== undefined) return !!marker;
   return type.length >= 2;
 }
 
@@ -26,7 +29,7 @@ function isTrrnComponent(type: Function): boolean {
  * 为 trrn 组件创建 Preact 适配器。
  * 外层函数执行一次（持有状态），render 函数每次渲染时调用。
  */
-function createTrrnAdapter(type: Function): Function {
+function createTrrnAdapter(type: AnyFunction): AnyFunction {
   function Adapter(props: any) {
     const [, tick] = useState(0);
     const propsRef = useRef<any>(undefined);
@@ -43,6 +46,11 @@ function createTrrnAdapter(type: Function): Function {
     const cleanupRef = useRef<(() => void) | null>(null);
     const aliveRef = useRef(true);
 
+    // 在 adapter 顶层预先解析所有已注册的 context
+    for (const preactCtx of registeredContexts) {
+      resolveContext(preactCtx);
+    }
+
     const ctxRef = useRef<Ctx>({
       update(newProps?: Record<string, unknown>) {
         if (!aliveRef.current) return;
@@ -58,6 +66,7 @@ function createTrrnAdapter(type: Function): Function {
       onUnmount(fn: () => void) {
         cleanupRef.current = fn;
       },
+      consume: createConsume(),
     });
 
     // 外层函数只执行一次
@@ -91,7 +100,7 @@ function createTrrnAdapter(type: Function): Function {
  * 获取函数类型组件的适配器（带缓存）。
  * 自动识别 trrn 组件和标准 Preact 组件。
  */
-export function getAdapter(type: Function): Function {
+export function getAdapter(type: AnyFunction): AnyFunction {
   let adapter = adapterCache.get(type);
   if (!adapter) {
     if (isTrrnComponent(type)) {

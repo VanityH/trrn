@@ -1,8 +1,7 @@
-import { createContext as preactCreateContext } from "preact";
+import { createContext as preactCreateContext, h as preactH } from "preact";
 import { useContext } from "preact/hooks";
 import type { Context as PreactContext } from "preact";
 import type { Component, Ctx } from "./types.ts";
-import { h } from "./h.ts";
 import { TRRN_MARKER } from "./types.ts";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -37,8 +36,8 @@ export function resolveContext<T>(preactCtx: PreactContext<T>): T {
 /**
  * 从 store 中读取已解析的 context 值（由 ctx.consume 调用）。
  */
-export function readContext<T>(preactCtx: PreactContext<T>): T {
-  return (contextStore.get(preactCtx) ?? preactCtx.defaultValue) as T;
+export function readContext<T>(preactCtx: PreactContext<T>, fallback: T): T {
+  return (contextStore.get(preactCtx) ?? fallback) as T;
 }
 
 // ── Context registry ──────────────────────────────────────────
@@ -74,7 +73,7 @@ export function createContext<T>(defaultValue: T): Context<T> {
   const Provider: Component<{ value: T }> = (_props, _ctx) => {
     return (p) => {
       const value = p?.value ?? defaultValue;
-      return h(preactCtx.Provider as any, { value } as any, p as any);
+      return preactH(preactCtx.Provider as any, { value } as any, p as any);
     };
   };
   (Provider as any)[TRRN_MARKER] = true;
@@ -93,7 +92,7 @@ export function createContext<T>(defaultValue: T): Context<T> {
  * 从预收集的 context store 中读取值。
  */
 export function createConsume(): Ctx["consume"] {
-  return function consume<T>(context: Context<T>): T {
-    return readContext(context._preactCtx);
+  return function consume<T>(ctx: Context<T>): T {
+    return readContext(ctx._preactCtx, ctx.defaultValue);
   };
 }
