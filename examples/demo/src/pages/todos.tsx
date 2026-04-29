@@ -1,11 +1,11 @@
-import type { Ctx, RenderFn } from "trrn";
+import type { Ctx } from "trrn";
 import { TodoItem } from "../components/TodoItem.tsx";
 
-export function TodosPage(_: undefined, { update }: Ctx): RenderFn {
+export function TodosPage(_: unknown, { update }: Ctx) {
   let todos = [
     { id: 1, text: "Learn trrn closure pattern", done: true },
-    { id: 2, text: "Build a todo app", done: false },
-    { id: 3, text: "Test update(newProps)", done: false },
+    { id: 2, text: "Use update(newProps) pattern", done: false },
+    { id: 3, text: "Explore Context API", done: false },
   ];
   let text = "";
   let filter: "all" | "active" | "done" = "all";
@@ -28,18 +28,11 @@ export function TodosPage(_: undefined, { update }: Ctx): RenderFn {
     update();
   };
 
-  const filtered = todos.filter((t) => {
-    if (filter === "active") return !t.done;
-    if (filter === "done") return t.done;
-    return true;
-  });
-
   return () => (
     <div>
       <h2>Todo List</h2>
       <p style="color: #666; font-size: 14px;">
-        Demonstrates: list + keys, conditional rendering, form input, filter,
-        and <code>update()</code> with closure state.
+        List rendering + keys, conditional rendering, form input, filtering.
       </p>
 
       <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -78,20 +71,30 @@ export function TodosPage(_: undefined, { update }: Ctx): RenderFn {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {todos.filter((t) => {
+        if (filter === "active") return !t.done;
+        if (filter === "done") return t.done;
+        return true;
+      }).length === 0 ? (
         <p style="color: #999;">No todos.</p>
       ) : (
         <ul style="list-style: none; padding: 0;">
-          {filtered.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              id={todo.id}
-              text={todo.text}
-              done={todo.done}
-              onToggle={toggle}
-              onRemove={remove}
-            />
-          ))}
+          {todos
+            .filter((t) => {
+              if (filter === "active") return !t.done;
+              if (filter === "done") return t.done;
+              return true;
+            })
+            .map((todo) => (
+              <TodoItem
+                key={todo.id}
+                id={todo.id}
+                text={todo.text}
+                done={todo.done}
+                onToggle={toggle}
+                onRemove={remove}
+              />
+            ))}
         </ul>
       )}
     </div>

@@ -1,16 +1,16 @@
-import type { Ctx, RenderFn } from "trrn";
+import type { Ctx } from "trrn";
 import { Spinner } from "../components/Spinner.tsx";
 
 function simulateFetch(id: number): Promise<string> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (id === 0) reject(new Error("Network error"));
+      if (id <= 0) reject(new Error("Network error"));
       else resolve(`Data loaded for id: ${id}`);
     }, 1500);
   });
 }
 
-export function AsyncPage(_: undefined, { update, onMount, onUnmount }: Ctx): RenderFn {
+export function AsyncPage(_: unknown, { update, onMount, onUnmount }: Ctx) {
   let status = "idle" as "idle" | "loading" | "success" | "error";
   let data = "";
   let errorMsg = "";
@@ -22,7 +22,7 @@ export function AsyncPage(_: undefined, { update, onMount, onUnmount }: Ctx): Re
     status = "loading";
     data = "";
     errorMsg = "";
-    const id = fetchId;
+    const id = ++fetchId;
     update();
 
     simulateFetch(id)
@@ -46,8 +46,7 @@ export function AsyncPage(_: undefined, { update, onMount, onUnmount }: Ctx): Re
     <div>
       <h2>Async Data Loading</h2>
       <p style="color: #666; font-size: 14px;">
-        Demonstrates: <code>onMount</code> init, <code>onUnmount</code>{" "}
-        cancellation, loading/error/success states.
+        onMount init + onUnmount cancellation + loading/error/success states.
       </p>
 
       <div style="margin-top: 16px; padding: 16px; border: 1px solid #eee; border-radius: 8px; min-height: 80px;">

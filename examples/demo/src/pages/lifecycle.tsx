@@ -1,11 +1,9 @@
-import type { Ctx, RenderFn } from "trrn";
+import type { Ctx } from "trrn";
 
 function Timer(
-  props: { id: number; onRemove: (id: number) => void } | undefined,
+  { id, onRemove }: { id: number; onRemove: (id: number) => void },
   { update, onMount, onUnmount }: Ctx,
-): RenderFn {
-  const id = props?.id;
-  const onRemove = props?.onRemove;
+) {
   let seconds = 0;
   let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -21,20 +19,14 @@ function Timer(
       <span style="font-variant-numeric: tabular-nums; min-width: 60px;">
         Timer #{id}: {seconds}s
       </span>
-      <button
-        onClick={() => onRemove?.(id!)}
-        style="padding: 2px 8px; cursor: pointer;"
-      >
+      <button onClick={() => onRemove(id)} style="padding: 2px 8px; cursor: pointer;">
         Remove
       </button>
     </div>
   );
 }
 
-export function LifecyclePage(
-  _props: Record<string, unknown> | undefined,
-  { update }: Ctx,
-): RenderFn {
+export function LifecyclePage(_: unknown, { update }: Ctx) {
   let timers = [1];
   let nextId = 2;
 
@@ -42,8 +34,7 @@ export function LifecyclePage(
     <div>
       <h2>Lifecycle</h2>
       <p style="color: #666; font-size: 14px;">
-        Demonstrates: <code>onMount</code> (start interval),{" "}
-        <code>onUnmount</code> (clear interval on remove), conditional
+        onMount (start interval) + onUnmount (clear interval) + conditional
         mount/unmount.
       </p>
 
@@ -55,7 +46,13 @@ export function LifecyclePage(
       </button>
 
       {timers.length === 0 && <p style="color: #999;">No timers. Add one!</p>}
-      {timers.map((id) => <Timer key={id} id={id} onRemove={(id) => { timers = timers.filter((t) => t !== id); update(); }} />)}
+      {timers.map((id) => (
+        <Timer
+          key={id}
+          id={id}
+          onRemove={(id) => { timers = timers.filter((t) => t !== id); update(); }}
+        />
+      ))}
     </div>
   );
 }
