@@ -72,8 +72,9 @@ export function createContext<T>(defaultValue: T): Context<T> {
   // Provider 是一个 trrn 组件
   const Provider: Component<{ value: T }> = (_props, _ctx) => {
     return (p) => {
-      const value = p?.value ?? defaultValue;
-      return preactH(preactCtx.Provider as any, { value } as any, p as any);
+      const value = (p as any)?.value ?? defaultValue;
+      const children = (p as any)?.children;
+      return preactH(preactCtx.Provider as any, { value } as any, children as any);
     };
   };
   (Provider as any)[TRRN_MARKER] = true;
