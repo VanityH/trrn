@@ -45,6 +45,16 @@ importers:
         version: 0.1.19(@types/node@25.6.0)(jiti@2.6.1)(jsdom@29.1.0)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(jiti@2.6.1)(yaml@2.8.3))(yaml@2.8.3)
 
   examples/demo:
+    dependencies:
+      preact:
+        specifier: 11.0.0-beta.1
+        version: 11.0.0-beta.1
+      preact-iso:
+        specifier: ^2.11.1
+        version: 2.11.1(preact-render-to-string@6.6.7(preact@11.0.0-beta.1))(preact@11.0.0-beta.1)
+      vanity-h:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       trrn:
         specifier: 'workspace:'
@@ -1383,6 +1393,17 @@ packages:
     resolution: {integrity: sha512-W62t/Se6rA0Az3DfCL0AqJwXuKwBeYg6nOaIgzP+xZ7N5BFCI7DYi1qs6ygUYT6rvfi6t9k65UMLJC+PHZpDAA==}
     engines: {node: ^10 || ^12 || >=14}
 
+  preact-iso@2.11.1:
+    resolution: {integrity: sha512-rLy0RmzP/hrDjnFdnEblxFgKtzUj4njkHrpGJBGS7S4QuYw1zv0lA38qsWpeAAB10JAz/hF2CsHrLen9ufCtbw==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
+      preact-render-to-string: '>=6.4.0'
+
+  preact-render-to-string@6.6.7:
+    resolution: {integrity: sha512-3XdbsX3+vn9dQW+jJI/FsI9rlkgl6dbeUpqLsChak6jp3j3auFqBCkno7VChbMFs5Q8ylBj6DrUkKRwtVN3nvw==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
+
   preact@11.0.0-beta.1:
     resolution: {integrity: sha512-HEG7hlrCoGpESpCgvuOwt9v7nfqd3/FQCMY8OTrohIN/k6JGcVTWMUOm7+WtWkHd6uQrEYNyQUNgBG4JsDmhRQ==}
 
@@ -2464,6 +2485,15 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  preact-iso@2.11.1(preact-render-to-string@6.6.7(preact@11.0.0-beta.1))(preact@11.0.0-beta.1):
+    dependencies:
+      preact: 11.0.0-beta.1
+      preact-render-to-string: 6.6.7(preact@11.0.0-beta.1)
+
+  preact-render-to-string@6.6.7(preact@11.0.0-beta.1):
+    dependencies:
+      preact: 11.0.0-beta.1
 
   preact@11.0.0-beta.1: {}
 

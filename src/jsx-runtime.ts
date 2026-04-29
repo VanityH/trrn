@@ -44,5 +44,6 @@ export function jsxDEV(
   return h(type, withKey(props, key));
 }
 
-// 从 Preact 导出 Fragment（与 JSX <> 片段语法对应）
+// 从 Preact 导出 Fragment 和 JSX 类型命名空间
 export { Fragment } from "preact";
+export type { JSX } from "preact";

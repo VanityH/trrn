@@ -13,5 +13,10 @@
     "typescript": "~6.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"
+  },
+  "dependencies": {
+    "preact": "11.0.0-beta.1",
+    "preact-iso": "^2.11.1",
+    "vanity-h": "^1.1.0"
   }
 }

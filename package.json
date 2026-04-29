@@ -19,7 +19,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.mjs",
+    ".": "./dist/index.js",
+    "./jsx-runtime": "./dist/jsx-runtime.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {
