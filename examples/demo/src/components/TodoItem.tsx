@@ -1,22 +1,22 @@
 import type { RenderFn } from "trrn";
 
-export function TodoItem(
-  props:
-    | {
-        id: number;
-        text: string;
-        done: boolean;
-        onToggle: (id: number) => void;
-        onRemove: (id: number) => void;
-      }
-    | undefined,
-): RenderFn {
-  const { id, text, done, onToggle, onRemove } = props ?? {};
-
+export function TodoItem({
+  id,
+  text,
+  done,
+  onToggle,
+  onRemove,
+}: {
+  id: number;
+  text: string;
+  done: boolean;
+  onToggle: (id: number) => void;
+  onRemove: (id: number) => void;
+}): RenderFn {
   return () => (
     <li class="todo-item" key={id}>
       <span
-        onClick={() => onToggle?.(id!)}
+        onClick={() => onToggle(id)}
         style={{
           cursor: "pointer",
           textDecoration: done ? "line-through" : "none",
@@ -25,7 +25,7 @@ export function TodoItem(
       >
         {text}
       </span>
-      <button onClick={() => onRemove?.(id!)} style="margin-left: 8px;">
+      <button onClick={() => onRemove(id)} style="margin-left: 8px;">
         x
       </button>
     </li>

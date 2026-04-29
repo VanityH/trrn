@@ -128,20 +128,33 @@ export function getAdapter(type: AnyFunction): AnyFunction {
   let adapter = adapterCache.get(type);
   if (!adapter) {
     if (isTrrnComponent(type)) {
-      // trrn 组件：创建外层-once 适配器
       adapter = createTrrnAdapter(type);
     } else {
-      // 标准 Preact 组件：不做适配，直接用 Preact 原生渲染
-      // 但为了统一 h() 的调用方式，返回一个简单的包装
-      adapter = function PreactPassthrough(props: any) {
-        return preactH(type as any, props);
-      };
+      // 运行时探测：length < 2 时可能是解构参数，尝试调用检测
+      const probeResult = type({}, createProbeCtx());
+      if (typeof probeResult === "function") {
+        adapter = createTrrnAdapter(type);
+      } else {
+        adapter = function PreactPassthrough(props: any) {
+          return preactH(type as any, props);
+        };
+      }
     }
-    // 自动标记（不覆盖显式设置）
     if ((type as any)[TRRN_MARKER] === undefined) {
       (type as any)[TRRN_MARKER] = adapter.name !== "PreactPassthrough";
     }
     adapterCache.set(type, adapter);
   }
   return adapter;
+}
+
+/** 创建一个空的探测 ctx，用于运行时检测组件模式 */
+function createProbeCtx(): Ctx {
+  const noop = () => {};
+  return {
+    update: noop,
+    onMount: noop,
+    onUnmount: noop,
+    consume: <T>(_c: any) => undefined as unknown as T,
+  };
 }

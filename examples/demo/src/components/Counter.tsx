@@ -1,11 +1,10 @@
 import type { Ctx, RenderFn } from "trrn";
 
 export function Counter(
-  props: { initial?: number; label?: string } | undefined,
+  { initial = 0, label = "Count" }: { initial?: number; label?: string },
   { update }: Ctx,
 ): RenderFn {
-  let count = props?.initial ?? 0;
-  const label = props?.label ?? "Count";
+  let count = initial;
 
   return (props) => (
     <div class="counter">

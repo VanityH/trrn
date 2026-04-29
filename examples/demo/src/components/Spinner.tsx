@@ -1,8 +1,5 @@
 import type { RenderFn } from "trrn";
 
-export function Spinner(
-  props: { text?: string } | undefined,
-): RenderFn {
-  const text = props?.text ?? "Loading...";
+export function Spinner({ text = "Loading..." }: { text?: string }): RenderFn {
   return () => <div class="spinner">{text}</div>;
 }
