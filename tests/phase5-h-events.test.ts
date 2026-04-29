@@ -207,19 +207,20 @@ test("通过回调 ref 访问 DOM 元素", () => {
   const container = makeContainer();
   let elRef: HTMLElement | null = null;
 
+  const setRef = (el: HTMLElement | null) => {
+    elRef = el;
+  };
+
   const Comp: Component = (_props, _ctx) => {
     return (_p) =>
-      h("div", {
-        ref: (el: HTMLElement | null) => {
-          elRef = el;
-        },
-      }, "ref-test");
+      h("div", { ref: setRef as any }, "ref-test");
   };
 
   render(Comp, container);
 
   expect(elRef).toBeTruthy();
-  expect(elRef?.textContent).toBe("ref-test");
+  const el = elRef!;
+  expect(el.textContent).toBe("ref-test");
 
   container.remove();
 });
