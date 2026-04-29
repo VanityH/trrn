@@ -12,7 +12,8 @@ export interface Context<T> {
   /** 默认值 */
   defaultValue: T;
   /** Provider 组件 */
-  Provider: Component<{ value: T }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Provider: Component<{ value: T; children?: any }>;
 }
 
 // ── Context value store（adapter 使用） ───────────────────────
@@ -70,7 +71,8 @@ export function createContext<T>(defaultValue: T): Context<T> {
   registeredContexts.push(preactCtx);
 
   // Provider 是一个 trrn 组件
-  const Provider: Component<{ value: T }> = (_props, _ctx) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Provider: Component<{ value: T; children?: any }> = (_props, _ctx) => {
     return (p) => {
       const value = (p as any)?.value ?? defaultValue;
       const children = (p as any)?.children;

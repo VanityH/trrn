@@ -20,6 +20,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.js",
+    "./jsx-dev-runtime": "./dist/jsx-dev-runtime.js",
     "./jsx-runtime": "./dist/jsx-runtime.js",
     "./package.json": "./package.json"
   },
@@ -27,7 +28,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack src/index.ts src/jsx-runtime.ts",
+    "build": "vp pack src/index.ts src/jsx-runtime.ts src/jsx-dev-runtime.ts",
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",
