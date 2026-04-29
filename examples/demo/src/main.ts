@@ -124,7 +124,7 @@ const App: Component = (_props, _ctx) => {
         p.style("color: #666")("trrn 闭包组件 + vanity-h 链式 DSL — 无需 JSX，无需 useState"),
       ),
 
-      // Theme.Provider.$(Counter.$()),
+      // Theme.Provider.$(Counter.$()), // 这里不会渲染子元素
 
       main(
         // v.x<Props>() 泛型方式调用 Counter，支持类型推断
