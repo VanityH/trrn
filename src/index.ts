@@ -6,3 +6,4 @@ export { action } from "./action.ts";
 export { ErrorBoundary } from "./error-boundary.ts";
 export { createContext } from "./context.ts";
 export type { Context } from "./context.ts";
+export { StrictMode } from "./strict-mode.ts";
