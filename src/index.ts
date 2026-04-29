@@ -3,3 +3,4 @@ export { TRRN_MARKER } from "./types.ts";
 export { h } from "./h.ts";
 export { render } from "./render.ts";
 export { action } from "./action.ts";
+export { ErrorBoundary } from "./error-boundary.ts";

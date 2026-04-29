@@ -14,7 +14,10 @@ const adapterCache = new WeakMap<object, Function>();
  * 优先级：(1) Symbol 标记 (2) 参数数量启发式 (props+ctx=2)
  */
 function isTrrnComponent(type: Function): boolean {
-  return (type as any)[TRRN_MARKER] === true || type.length >= 2;
+  const marker = (type as any)[TRRN_MARKER];
+  // 显式 false → 非 trrn；显式 true → trrn；未标记 → 参数数量启发式
+  if (marker !== undefined) return marker;
+  return type.length >= 2;
 }
 
 // ── Adapter factory ───────────────────────────────────────────
@@ -101,8 +104,10 @@ export function getAdapter(type: Function): Function {
         return preactH(type as any, props);
       };
     }
-    // 自动标记已识别的组件（后续使用走快速路径）
-    (type as any)[TRRN_MARKER] = adapter.name !== "PreactPassthrough";
+    // 自动标记（不覆盖显式设置）
+    if ((type as any)[TRRN_MARKER] === undefined) {
+      (type as any)[TRRN_MARKER] = adapter.name !== "PreactPassthrough";
+    }
     adapterCache.set(type, adapter);
   }
   return adapter;

@@ -1,5 +1,6 @@
 /**
  * Phase 7: action() + ctx.onMount() / ctx.onUnmount() 测试
+ * 注：Preact useEffect 通过 RAF + setTimeout(35ms) 调度，测试需等待 >50ms
  */
 import { expect, test, vi } from "vite-plus/test";
 import { render as preactRender, h as preactH } from "preact";
@@ -7,6 +8,7 @@ import { render, h, action } from "../src/index.ts";
 import type { Component } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
+const waitEffects = () => new Promise<void>((r) => setTimeout(r, 60));
 
 function makeContainer(): HTMLElement {
   const el = document.createElement("div");
@@ -48,11 +50,15 @@ test("action(ctx, fn) 转发事件参数", async () => {
 
   const Comp: Component = (_props, ctx) => {
     return (_p) =>
-      h("button", {
-        onClick: action(ctx, (e: MouseEvent) => {
-          captured = e.type;
-        }),
-      }, "click");
+      h(
+        "button",
+        {
+          onClick: action(ctx, (e: MouseEvent) => {
+            captured = e.type;
+          }),
+        },
+        "click",
+      );
   };
 
   render(Comp, container);
@@ -69,14 +75,20 @@ test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
     let a = 0;
     let b = 0;
     return (_p) =>
-      h("div", null,
+      h(
+        "div",
+        null,
         h("span", null, String(a + b)),
-        h("button", {
-          onClick: action(ctx, () => {
-            a++;
-            b += 2;
-          }),
-        }, "inc"),
+        h(
+          "button",
+          {
+            onClick: action(ctx, () => {
+              a++;
+              b += 2;
+            }),
+          },
+          "inc",
+        ),
       );
   };
 
@@ -92,7 +104,6 @@ test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
 // ── ctx.onMount() tests ───────────────────────────────────────
 
 test("ctx.onMount() 在首帧渲染后调用", async () => {
-
   const container = makeContainer();
   const onMountSpy = vi.fn();
 
@@ -104,15 +115,12 @@ test("ctx.onMount() 在首帧渲染后调用", async () => {
   render(Comp, container);
   expect(container.textContent).toBe("mounted");
 
-  await new Promise((r) => setTimeout(r, 50));
+  await waitEffects();
   expect(onMountSpy).toHaveBeenCalledTimes(1);
-
-  vi.useRealTimers();
   container.remove();
 });
 
 test("ctx.onMount() 可以访问 DOM", async () => {
-
   const container = makeContainer();
   let domText = "";
 
@@ -125,10 +133,8 @@ test("ctx.onMount() 可以访问 DOM", async () => {
   };
 
   render(Comp, container);
-  await new Promise((r) => setTimeout(r, 50));
+  await waitEffects();
   expect(domText).toBe("hello-dom");
-
-  vi.useRealTimers();
   container.remove();
 });
 
@@ -141,16 +147,16 @@ test("多个 ctx.onMount() 回调依次执行", async () => {
     return () => h("div", null, "ok");
   };
 
-  render(Comp, makeContainer());
-  await new Promise((r) => setTimeout(r, 50));
+  const c = makeContainer();
+  render(Comp, c);
+  await waitEffects();
   expect(calls).toEqual(["a", "b"]);
-  vi.useRealTimers();
+  c.remove();
 });
 
 // ── ctx.onUnmount() tests ─────────────────────────────────────
 
 test("ctx.onUnmount() 在组件替换时触发", async () => {
-
   const container = makeContainer();
   const cleanupFn = vi.fn();
 
@@ -160,15 +166,15 @@ test("ctx.onUnmount() 在组件替换时触发", async () => {
   };
 
   render(Comp, container);
-  await new Promise((r) => setTimeout(r, 50));
+  await waitEffects();
+  expect(cleanupFn).not.toHaveBeenCalled();
 
   function Other() {
     return preactH("div", null, "other");
   }
   preactRender(preactH(Other, null), container);
-  await new Promise((r) => setTimeout(r, 50));
+  await waitEffects();
 
   expect(cleanupFn).toHaveBeenCalledTimes(1);
-  vi.useRealTimers();
   container.remove();
 });
