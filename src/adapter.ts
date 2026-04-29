@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "preact/hooks";
 import type { Ctx, RenderFn } from "./types.ts";
 import { TRRN_MARKER } from "./types.ts";
 import { createConsume, registeredContexts, resolveContext } from "./context.ts";
+import { warnUpdateDuringRender, warnUpdateAfterUnmount } from "./warnings.ts";
 
 // ── Adapter cache ─────────────────────────────────────────────
 
@@ -30,10 +31,13 @@ function isTrrnComponent(type: AnyFunction): boolean {
  * 外层函数执行一次（持有状态），render 函数每次渲染时调用。
  */
 function createTrrnAdapter(type: AnyFunction): AnyFunction {
+  const componentName = (type as any).displayName || type.name || "Unknown";
+
   function Adapter(props: any) {
     const [, tick] = useState(0);
     const propsRef = useRef<any>(undefined);
     const internalRef = useRef(false);
+    const renderingRef = useRef(false);
 
     // 仅当父子 re-render 传入新 props 时同步；ctx.update() 触发的跳过
     if (!internalRef.current) {
@@ -53,7 +57,13 @@ function createTrrnAdapter(type: AnyFunction): AnyFunction {
 
     const ctxRef = useRef<Ctx>({
       update(newProps?: Record<string, unknown>) {
-        if (!aliveRef.current) return;
+        if (!aliveRef.current) {
+          warnUpdateAfterUnmount(componentName);
+          return;
+        }
+        if (renderingRef.current) {
+          warnUpdateDuringRender(componentName);
+        }
         internalRef.current = true;
         if (newProps !== undefined) {
           propsRef.current = { ...propsRef.current, ...newProps };
@@ -88,8 +98,22 @@ function createTrrnAdapter(type: AnyFunction): AnyFunction {
       };
     }, []);
 
-    return renderFnRef.current(propsRef.current);
+    // 渲染阶段跟踪 + 错误包装
+    renderingRef.current = true;
+    try {
+      return renderFnRef.current(propsRef.current);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[trrn] Error in <${componentName}>: ${message}`, {
+        cause: err instanceof Error ? err : undefined,
+      });
+    } finally {
+      renderingRef.current = false;
+    }
   }
+
+  // 设置 displayName 以便 DevTools 识别
+  Adapter.displayName = `trrn:${componentName}`;
 
   return Adapter;
 }

@@ -1,5 +1,5 @@
-import { render, h } from "./index.ts";
-import type { Component } from "./index.ts";
+import { render, h } from "../../../src/index.ts";
+import type { Component } from "../../../src/index.ts";
 import createVanity from "vanity-h";
 
 // createVanity 只能调用一次（会设置 Object.prototype.$）
