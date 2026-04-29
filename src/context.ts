@@ -1,6 +1,6 @@
 import { createContext as preactCreateContext, h as preactH } from "preact";
 import { useContext } from "preact/hooks";
-import type { Context as PreactContext } from "preact";
+import type { Context as PreactContext, ComponentChildren } from "preact";
 import type { Component, Ctx } from "./types.ts";
 import { TRRN_MARKER } from "./types.ts";
 
@@ -12,8 +12,7 @@ export interface Context<T> {
   /** 默认值 */
   defaultValue: T;
   /** Provider 组件 */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Provider: Component<{ value: T; children?: any }>;
+  Provider: Component<{ value: T; children?: ComponentChildren }>;
 }
 
 // ── Context value store（adapter 使用） ───────────────────────
@@ -71,8 +70,7 @@ export function createContext<T>(defaultValue: T): Context<T> {
   registeredContexts.push(preactCtx);
 
   // Provider 是一个 trrn 组件
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Provider: Component<{ value: T; children?: any }> = (_props, _ctx) => {
+  const Provider: Component<{ value: T; children?: ComponentChildren }> = (_props, _ctx) => {
     return (p) => {
       const value = (p as any)?.value ?? defaultValue;
       const children = (p as any)?.children;

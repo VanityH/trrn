@@ -28,8 +28,7 @@ export function h(
   ...children: ComponentChildren[]
 ): VNode {
   if (typeof type === "function") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Adapter = getAdapter(type as (...args: any[]) => any);
+    const Adapter = getAdapter(type);
     return preactH(Adapter as any, props as any, ...children);
   }
   return preactH(type as any, props as any, ...children);

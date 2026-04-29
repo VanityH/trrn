@@ -7,8 +7,7 @@ import type { ComponentChildren } from "preact";
 export interface Context<T> {
   _preactCtx: any;
   defaultValue: T;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Provider: Component<{ value: T; children?: any }>;
+  Provider: Component<{ value: T; children?: ComponentChildren }>;
 }
 
 // ── Ctx ──────────────────────────────────────────────────────
