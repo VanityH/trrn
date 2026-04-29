@@ -39,9 +39,9 @@ test("初始 props 传给外层函数", () => {
   container.remove();
 });
 
-// ─── Test 2: 无初始 props 时外层收到 undefined ──────────────
+// ─── Test 2: 无初始 props 时外层收到空对象 ──────────────────
 
-test("无初始 props 时 outer 和 render 均收到 undefined", () => {
+test("无初始 props 时 outer 和 render 均收到空对象", () => {
   const container = makeContainer();
   let outerProps: any;
   let renderProps: any;
@@ -56,8 +56,9 @@ test("无初始 props 时 outer 和 render 均收到 undefined", () => {
 
   render(Comp, container);
 
-  expect(outerProps).toBeUndefined();
-  expect(renderProps).toBeUndefined();
+  // Preact 标准化 props 为空对象，解构带默认值的行为一致
+  expect(outerProps).toEqual({});
+  expect(renderProps).toEqual({});
   expect(container.textContent).toBe("ok");
 
   container.remove();
