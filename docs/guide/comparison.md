@@ -25,6 +25,26 @@
 | 清理       | `ctx.onUnmount(fn)`         | `finally` 块          |
 | Props 更新 | `render(newProps)`          | `for ({...} of this)` |
 
+## trrn 与 Preact 生态
+
+trrn 的 `h()` 可自动适配所有 Preact 组件：
+
+```ts
+import { Router } from "preact-iso"; // Preact 官方同构路由
+
+h(
+  "div",
+  null,
+  h(
+    Router,
+    null, // ✅ Preact 组件
+    h(MyTrrnPage, { path: "/" }), // ✅ trrn 组件
+  ),
+);
+```
+
+`h()` 检测规则：参数 >= 2 的按 trrn 组件处理，< 2 的按 Preact 原生渲染。所有 Preact hooks、第三方组件库、preact/compat（React 兼容层）均可直接使用。
+
 ## 何时选择 trrn
 
 - 你喜欢闭包自然的变量作用域，不想管理依赖数组
