@@ -11,15 +11,15 @@
     "state management",
     "ui"
   ],
-  "homepage": "https://github.com/VanityH/trrn-h#readme",
+  "homepage": "https://github.com/VanityH/trrn#readme",
   "bugs": {
-    "url": "https://github.com/VanityH/trrn-h/issues"
+    "url": "https://github.com/VanityH/trrn/issues"
   },
   "license": "MIT",
   "author": "Himavanta@foxmail.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VanityH/trrn-h.git"
+    "url": "git+https://github.com/VanityH/trrn.git"
   },
   "files": [
     "dist"
