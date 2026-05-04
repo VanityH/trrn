@@ -37,6 +37,7 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 - [生命周期](#生命周期)
 - [Render 函数中的 Preact hooks](#render-函数中的-preact-hooks)
 - [与 Preact 互操作](#与-preact-互操作)
+- [生态集成](#生态集成)
 - [API 参考](#api-参考)
 - [常见陷阱](#常见陷阱)
 
@@ -351,6 +352,59 @@ const App = defineComponent(() => {
 - 可直接使用 Preact hooks（`useState`、`useEffect` 等）——但既然用了 trrn 就不需要了
 - 可直接使用 Preact Context、错误边界、Suspense
 - 第三方 Preact 库无需任何适配层
+
+---
+
+## 生态集成
+
+trrn 组件是标准 Preact 组件，render 函数开放所有 Preact hooks，因此可以与多数生态库配合使用。
+
+### Zustand — 全局状态管理
+
+Zustand 不依赖 Provider，store 可直接在 factory 中订阅：
+
+```tsx
+import { createStore } from "zustand/vanilla";
+
+const store = createStore((set) => ({
+  count: 0,
+  inc: () => set((s) => ({ count: s.count + 1 })),
+}));
+
+const Counter = defineComponent((_, { update, onUnmount }) => {
+  const unsub = store.subscribe(() => update());
+  onUnmount(() => unsub());
+
+  return () => (
+    <div>
+      <span>{store.getState().count}</span>
+      <button onClick={() => store.getState().inc()}>+</button>
+    </div>
+  );
+});
+```
+
+store 在组件外定义，不受组件生命周期影响。`subscribe` + `update()` 实现响应式同步。
+
+### vanity-h — 流畅的 hyperscript DSL
+
+替代 `h(tag, props, children)` 嵌套写法：
+
+```tsx
+import { h } from "preact";
+import createVanity from "vanity-h";
+
+const { div, button, span } = createVanity(h);
+
+const Counter = defineComponent(() => {
+  return () => {
+    const [count, setCount] = useState(0);
+    return div(span(count), button({ onClick: () => setCount((n) => n + 1) }, "+"));
+  };
+});
+```
+
+vanity-h 仅 186 字节，支持 Preact、React、Vue 等任何 hyperscript 兼容框架。
 
 ---
 

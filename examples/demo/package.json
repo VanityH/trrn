@@ -11,7 +11,8 @@
   "dependencies": {
     "preact": "11.0.0-beta.1",
     "preact-iso": "^2.11.1",
-    "vanity-h": "^1.1.0"
+    "vanity-h": "^1.1.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "trrn": "workspace:",
