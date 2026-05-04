@@ -129,6 +129,11 @@ export function getAdapter(type: AnyFunction): AnyFunction {
   if (!adapter) {
     if (isTrrnComponent(type)) {
       adapter = createTrrnAdapter(type);
+    } else if (type.prototype?.render) {
+      // Class 组件（如 ErrorBoundary）— 跳过运行时探测，直接透传 Preact
+      adapter = function PreactPassthrough(props: any) {
+        return preactH(type as any, props);
+      };
     } else {
       // 运行时探测：length < 2 时可能是解构参数，尝试调用检测
       const probeResult = type({}, createProbeCtx());
