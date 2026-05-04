@@ -51,12 +51,12 @@ examples/demo/src/
 
 新增 4 个深度使用 trrn 高级能力的复杂页面：
 
-| 页面 | 路径 | 展示的 trrn 高级模式 |
-|------|------|---------------------|
-| **实时分析面板** | /admin/analytics | `onMount`/`onUnmount` 管理定时器生命周期、`action()` 包装刷新按钮、闭包数组维护时间序列、子组件接收 `update(newProps)` |
-| **数据探索** | /admin/data-explorer | 多字段排序/组合筛选/分页/行多选 — 所有状态通过闭包变量管理、`SortHeader` 通过 `update(newProps)` 更新排序指示器、`action()` 包装批量操作、分页组件独立闭包 |
-| **表单向导** | /admin/wizard | 4 步骤表单跨步骤闭包状态持久化（无需全局 store）、`ErrorBoundary` 包裹渲染步骤、显式 `TRRN_MARKER` 标记组件、`action()` 提交、动态条件渲染 |
-| **看板** | /admin/kanban | 3 层嵌套组件（看板→列→卡片）、每列独立闭包（折叠/排序互不影响）、卡片独立闭包（展开状态）、`update(newProps)` 推折叠状态、`action()` 包装 CRUD 操作 |
+| 页面             | 路径                 | 展示的 trrn 高级模式                                                                                                                                       |
+| ---------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **实时分析面板** | /admin/analytics     | `onMount`/`onUnmount` 管理定时器生命周期、`action()` 包装刷新按钮、闭包数组维护时间序列、子组件接收 `update(newProps)`                                     |
+| **数据探索**     | /admin/data-explorer | 多字段排序/组合筛选/分页/行多选 — 所有状态通过闭包变量管理、`SortHeader` 通过 `update(newProps)` 更新排序指示器、`action()` 包装批量操作、分页组件独立闭包 |
+| **表单向导**     | /admin/wizard        | 4 步骤表单跨步骤闭包状态持久化（无需全局 store）、`ErrorBoundary` 包裹渲染步骤、显式 `TRRN_MARKER` 标记组件、`action()` 提交、动态条件渲染                 |
+| **看板**         | /admin/kanban        | 3 层嵌套组件（看板→列→卡片）、每列独立闭包（折叠/排序互不影响）、卡片独立闭包（展开状态）、`update(newProps)` 推折叠状态、`action()` 包装 CRUD 操作        |
 
 ### 使用的 trrn 高级 API
 

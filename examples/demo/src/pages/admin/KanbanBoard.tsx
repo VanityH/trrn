@@ -1,14 +1,15 @@
 /**
- * 看板 — 展示 trrn 复杂组件组合与跨组件通信
+ * 看板 — 展示 trrn 状态提升 + render 函数参数接收更新 props
  *
  * 核心模式:
- * - 看板列作为子组件，通过 update(newProps) 接收更新
- * - action() 包装所有事件处理器
- * - 闭包管理任务 CRUD 操作
- * - 多层嵌套组件组合（看板 → 列 → 卡片）
- * - 拖拽任务跨列移动（通过按钮模拟）
- * - 动态添加/编辑/删除任务
- * - 每个列有独立的状态（折叠、排序）
+ * - 所有状态集中在 KanbanBoardPage 管理
+ * - KanbanColumn/KanbanCard 无内部闭包状态
+ * - 子组件的 render 函数通过 props 参数接收最新数据
+ * - 父组件调用 update() 触发重渲染，Preact 将新 JSX props 传递给子组件 adapter
+ * - adapter 将 propsRef.current = props → renderFn(propsRef.current)
+ * - 因此子组件的 render 函数参数始终是最新 props
+ * - action() 包装事件处理器
+ * - 3 层嵌套组件（看板 → 列 → 卡片）
  */
 import type { Ctx, RenderFn } from "trrn";
 import { action } from "trrn";
@@ -95,27 +96,19 @@ function createInitialTasks(): Task[] {
   return tasks;
 }
 
-// ── 看板卡片组件 ───────────────────────────────────────────────
+// ── 看板卡片组件（纯展示，数据全部从 render 函数 props 参数获取） ──
 
-function KanbanCard(
-  {
-    task,
-    onMove,
-    onEdit,
-    onDelete,
-  }: {
-    task: Task;
-    onMove: (taskId: number, toCol: ColumnKey) => void;
-    onEdit: (task: Task) => void;
-    onDelete: (taskId: number) => void;
-  },
-  _ctx: Ctx,
-): RenderFn {
-  const priority = PRIORITY_CONFIG[task.priority];
-  // 每张卡用独立闭包记录展开状态
-  let expanded = false;
+function KanbanCard(_props: Record<string, unknown>, _ctx: Ctx): RenderFn {
+  return (latestProps) => {
+    const p = latestProps as any;
+    const task: Task = p.task;
+    const expanded: boolean = p.expanded;
+    const onMove = p.onMove;
+    const onEdit = p.onEdit;
+    const onDelete = p.onDelete;
+    const onToggleExpand = p.onToggleExpand;
+    const priority = PRIORITY_CONFIG[task.priority];
 
-  return () => {
     const canMove = COLUMNS.map((c) => c.key);
     const currentIdx = canMove.indexOf(task.column);
 
@@ -131,9 +124,7 @@ function KanbanCard(
           transition: "box-shadow 0.15s",
           boxShadow: expanded ? "0 4px 12px rgba(0,0,0,0.1)" : "0 1px 3px rgba(0,0,0,0.05)",
         }}
-        onClick={() => {
-          expanded = !expanded;
-        }}
+        onClick={onToggleExpand}
       >
         <div
           style={{
@@ -167,7 +158,6 @@ function KanbanCard(
               {task.desc}
             </p>
             <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-              {/* 向左移动 */}
               {currentIdx > 0 && (
                 <button
                   onClick={(e: any) => {
@@ -180,7 +170,6 @@ function KanbanCard(
                   ←
                 </button>
               )}
-              {/* 向右移动 */}
               {currentIdx < canMove.length - 1 && (
                 <button
                   onClick={(e: any) => {
@@ -231,34 +220,24 @@ const miniBtnStyle: Record<string, string> = {
   lineHeight: "1.2",
 };
 
-// ── 看板列组件 ─────────────────────────────────────────────────
+// ── 看板列组件（纯展示，数据全部从 render 函数 props 参数获取） ──
 
-function KanbanColumn(
-  {
-    def,
-    tasks,
-    onAdd,
-    onMove,
-    onEdit,
-    onDelete,
-  }: {
-    def: ColumnDef;
-    tasks: Task[];
-    onAdd: (col: ColumnKey) => void;
-    onMove: (taskId: number, toCol: ColumnKey) => void;
-    onEdit: (task: Task) => void;
-    onDelete: (taskId: number) => void;
-  },
-  _ctx: Ctx,
-): RenderFn {
-  // 每列独立闭包状态：是否折叠、排序方式
-  let collapsed = false;
-  let sortBy: "created" | "priority" | "alpha" = "created";
+function KanbanColumn(_props: Record<string, unknown>, _ctx: Ctx): RenderFn {
+  return (latestProps) => {
+    const p = latestProps as any;
+    const def: ColumnDef = p.def;
+    const tasks: Task[] = p.tasks;
+    const collapsed: boolean = p.collapsed;
+    const sortBy: "created" | "priority" | "alpha" = p.sortBy;
+    const expandedCards: Record<number, boolean> = p.expandedCards;
+    const onAdd = p.onAdd;
+    const onMove = p.onMove;
+    const onEdit = p.onEdit;
+    const onDelete = p.onDelete;
+    const onToggleCollapse = p.onToggleCollapse;
+    const onToggleSort = p.onToggleSort;
+    const onToggleExpand = p.onToggleExpand;
 
-  return (props: Record<string, unknown> | undefined) => {
-    if (props !== undefined) {
-      collapsed = (props as any).collapsed ?? collapsed;
-    }
     // 排序
     const sorted = [...tasks];
     if (sortBy === "priority") {
@@ -313,9 +292,7 @@ function KanbanColumn(
           </div>
           <div style={{ display: "flex", gap: "4px" }}>
             <button
-              onClick={() => {
-                collapsed = !collapsed;
-              }}
+              onClick={onToggleCollapse}
               style={{ ...miniBtnStyle, fontSize: "10px", padding: "2px 6px" }}
               title={collapsed ? "展开" : "折叠"}
             >
@@ -329,9 +306,7 @@ function KanbanColumn(
           {(["created", "priority", "alpha"] as const).map((s) => (
             <button
               key={s}
-              onClick={() => {
-                sortBy = s;
-              }}
+              onClick={() => onToggleSort(s)}
               style={{
                 padding: "2px 8px",
                 border: "none",
@@ -362,9 +337,11 @@ function KanbanColumn(
               <KanbanCard
                 key={task.id}
                 task={task}
+                expanded={expandedCards[task.id] ?? false}
                 onMove={onMove}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onToggleExpand={() => onToggleExpand(task.id)}
               />
             ))}
           </div>
@@ -399,12 +376,25 @@ function KanbanColumn(
   };
 }
 
-// ── 主页面 ─────────────────────────────────────────────────────
+// ── 主页面（所有状态集中管理） ─────────────────────────────────
 
 export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
-  // ── 闭包状态 ────────────────────────────────
+  // ── 状态集中管理 ────────────────────────────
   let tasks = createInitialTasks();
   let nextId = tasks.length + 1;
+
+  // 每列的折叠/排序状态
+  let columnStates: Record<
+    ColumnKey,
+    { collapsed: boolean; sortBy: "created" | "priority" | "alpha" }
+  > = {
+    todo: { collapsed: false, sortBy: "created" },
+    progress: { collapsed: false, sortBy: "created" },
+    done: { collapsed: false, sortBy: "created" },
+  };
+
+  // 每张卡片的展开状态
+  let expandedCards: Record<number, boolean> = {};
 
   // 编辑/新建 Modal
   let modalOpen = false;
@@ -417,7 +407,22 @@ export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
     column: "todo" as ColumnKey,
   };
 
-  // ── action() 包装操作 ───────────────────────
+  // ── 状态变更处理器（修改闭包变量 + update()） ──
+
+  const toggleCollapse = (col: ColumnKey) => {
+    columnStates[col].collapsed = !columnStates[col].collapsed;
+    update();
+  };
+
+  const toggleSort = (col: ColumnKey, s: "created" | "priority" | "alpha") => {
+    columnStates[col].sortBy = s;
+    update();
+  };
+
+  const toggleExpand = (taskId: number) => {
+    expandedCards[taskId] = !expandedCards[taskId];
+    update();
+  };
 
   const moveTask = (taskId: number, toCol: ColumnKey) => {
     tasks = tasks.map((t) => (t.id === taskId ? { ...t, column: toCol } : t));
@@ -429,7 +434,6 @@ export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
     update();
   };
 
-  // 使用 action() 包装保存任务
   const saveTask = action(update as any, () => {
     if (!editForm.title.trim()) return;
 
@@ -549,19 +553,26 @@ export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
           </div>
         </div>
 
-        {/* 看板列 */}
+        {/* 看板列 — 通过 JSX props 下推状态 */}
         <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "12px" }}>
           {COLUMNS.map((def) => {
             const colTasks = tasks.filter((t) => t.column === def.key);
+            const colState = columnStates[def.key];
             return (
               <KanbanColumn
                 key={def.key}
                 def={def}
                 tasks={colTasks}
+                collapsed={colState.collapsed}
+                sortBy={colState.sortBy}
+                expandedCards={expandedCards}
                 onAdd={openAdd}
                 onMove={moveTask}
                 onEdit={openEdit}
                 onDelete={deleteTask}
+                onToggleCollapse={() => toggleCollapse(def.key)}
+                onToggleSort={(s: string) => toggleSort(def.key, s as any)}
+                onToggleExpand={(id: number) => toggleExpand(id)}
               />
             );
           })}
@@ -721,7 +732,6 @@ export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
             >
               取消
             </Button>
-            {/* 使用 action() 包装保存 */}
             <Button variant="primary" onClick={saveTask}>
               {editingTask ? "保存" : "创建"}
             </Button>
@@ -735,16 +745,20 @@ export function KanbanBoardPage(_: unknown, { update }: Ctx): RenderFn {
         >
           <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: 2 }}>
             <li>
-              每个看板列的排序状态通过<strong>独立闭包</strong>管理 — 列之间互不影响
+              所有状态集中在 <strong>KanbanBoardPage</strong> 管理，子组件无内部闭包状态
             </li>
             <li>
-              卡片通过 <code>update(newProps)</code> 接收外部状态变更（如折叠状态）
+              子组件通过 <strong>render 函数的 props 参数</strong>接收最新数据 — 父组件 update()
+              触发重渲染后，Preact 将新 JSX props 传给子组件 adapter，adapter 调用
+              renderFn(propsRef.current) 时 props 参数即为最新值
+            </li>
+            <li>
+              排序/折叠/展开操作：父组件修改闭包变量后调用 <code>ctx.update()</code>，通过 JSX props
+              将新状态下推
             </li>
             <li>
               按钮操作使用 <code>action()</code> 包装，自动触发 <code>ctx.update()</code>
             </li>
-            <li>所有任务数据存储在页面组件的单个闭包变量中</li>
-            <li>每张卡片有独立闭包记录展开/折叠状态</li>
           </ul>
         </UICard>
       </div>
