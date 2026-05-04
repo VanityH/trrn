@@ -4,10 +4,7 @@ import { Card } from "../../components/ui/Card.tsx";
 import { fetchAnalytics } from "../../mock/api.ts";
 import type { AnalyticsData } from "../../mock/types.ts";
 
-export const AnalyticsPage = defineComponent<object>(function (
-  _,
-  { update, onMount, onUnmount }: Ctx,
-) {
+export const AnalyticsPage = defineComponent<object>((_, { update, onMount, onUnmount }: Ctx) => {
   let data: AnalyticsData | null = null;
   let loading = true;
   let error: string | null = null;
@@ -60,7 +57,7 @@ export const AnalyticsPage = defineComponent<object>(function (
     });
   });
 
-  return (__) => {
+  return () => {
     const cols = [
       { label: "页面浏览量", value: data?.pageViews ?? 0, color: "#6366f1" },
       { label: "活跃用户", value: data?.activeUsers ?? 0, color: "#10b981" },

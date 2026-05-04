@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface CardProps {
   title?: string;
@@ -8,7 +7,7 @@ interface CardProps {
   footer?: any;
 }
 
-export const Card = defineComponent<CardProps>(function (_, __: Ctx) {
+export const Card = defineComponent<CardProps>(() => {
   return (p) => (
     <div
       style={{

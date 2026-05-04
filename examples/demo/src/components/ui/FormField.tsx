@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface FormFieldProps {
   label: string;
@@ -8,7 +7,7 @@ interface FormFieldProps {
   children?: any;
 }
 
-export const FormField = defineComponent<FormFieldProps>(function (_, __: Ctx) {
+export const FormField = defineComponent<FormFieldProps>(() => {
   return (p) => (
     <div style={{ marginBottom: "16px" }}>
       <label

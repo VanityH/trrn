@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface BadgeProps {
   variant?: "default" | "success" | "warning" | "danger";
@@ -13,7 +12,7 @@ const colors: Record<string, string> = {
   danger: "background:#fee2e2;color:#991b1b;",
 };
 
-export const Badge = defineComponent<BadgeProps>(function (_, __: Ctx) {
+export const Badge = defineComponent<BadgeProps>(() => {
   return (p) => (
     <span
       style={{

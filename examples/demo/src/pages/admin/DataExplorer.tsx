@@ -11,7 +11,7 @@ type SortDir = "asc" | "desc";
 
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
-export const DataExplorerPage = defineComponent<object>(function (_, { update, onMount }: Ctx) {
+export const DataExplorerPage = defineComponent<object>((_, { update, onMount }: Ctx) => {
   let allTasks: Task[] = [];
   let search = "";
   let statusFilter = "";

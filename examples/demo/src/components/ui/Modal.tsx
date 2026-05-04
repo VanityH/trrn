@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface ModalProps {
   open: boolean;
@@ -8,7 +7,7 @@ interface ModalProps {
   children?: any;
 }
 
-export const Modal = defineComponent<ModalProps>(function (_, __: Ctx) {
+export const Modal = defineComponent<ModalProps>(() => {
   return (p) => {
     if (!p.open) return null;
     return (

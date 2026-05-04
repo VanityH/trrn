@@ -27,7 +27,7 @@ interface KanbanCardProps {
   onToggleExpand: (id: number) => void;
 }
 
-const KanbanCard = defineComponent<KanbanCardProps>(function (_, __: Ctx) {
+const KanbanCard = defineComponent<KanbanCardProps>(() => {
   const priorityColors: Record<string, string> = {
     urgent: "#ef4444",
     high: "#f97316",
@@ -112,7 +112,7 @@ interface KanbanColumnProps {
   onToggleExpand: (id: number) => void;
 }
 
-const KanbanColumn = defineComponent<KanbanColumnProps>(function (_, __: Ctx) {
+const KanbanColumn = defineComponent<KanbanColumnProps>(() => {
   return (p) => {
     const sorted = [...p.tasks].sort((a, b) => {
       if (p.sortBy === "priority") {
@@ -214,7 +214,7 @@ const KanbanColumn = defineComponent<KanbanColumnProps>(function (_, __: Ctx) {
 
 // ── KanbanBoardPage (父组件，持有全部状态) ──
 
-export const KanbanBoardPage = defineComponent<object>(function (_, { update, onMount }: Ctx) {
+export const KanbanBoardPage = defineComponent<object>((_, { update, onMount }: Ctx) => {
   let tasks: Task[] = [];
   let columns: Record<ColumnId, ColumnState> = {
     todo: { collapsed: false, sortBy: "created" },

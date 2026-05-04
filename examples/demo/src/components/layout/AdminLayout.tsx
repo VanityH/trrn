@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface AdminLayoutProps {
   title: string;
@@ -13,7 +12,7 @@ const SIDEBAR_ITEMS = [
   { path: "/admin/wizard", label: "表单向导", icon: "🧭" },
 ];
 
-export const AdminLayout = defineComponent<AdminLayoutProps>(function (_, __: Ctx) {
+export const AdminLayout = defineComponent<AdminLayoutProps>(() => {
   return (p) => (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f9fafb" }}>
       <nav style={{ width: "220px", background: "#1f2937", color: "#fff", padding: "20px 0" }}>

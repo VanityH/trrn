@@ -37,7 +37,7 @@ const INITIAL_FORM: FormData = {
 
 // ── Risky step (wrapped in ErrorBoundary) ──
 
-const RiskyStep = defineComponent<object>(function (_, __: Ctx) {
+const RiskyStep = defineComponent<object>(() => {
   let renderCount = 0;
 
   return () => {
@@ -67,7 +67,7 @@ const STEPS: { id: StepId; label: string }[] = [
   { id: 4, label: "确认提交" },
 ];
 
-export const WizardFormPage = defineComponent<object>(function (_, { update }: Ctx) {
+export const WizardFormPage = defineComponent<object>((_, { update }: Ctx) => {
   let currentStep: StepId = 1;
   let form: FormData = { ...INITIAL_FORM };
   let errors: Partial<Record<keyof FormData, string>> = {};

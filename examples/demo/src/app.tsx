@@ -19,7 +19,7 @@ function resolvePath(p: string): string {
   return p;
 }
 
-export const App = defineComponent<object>(function (_, { update, onMount, onUnmount }: Ctx) {
+export const App = defineComponent<object>((_, { update, onMount, onUnmount }: Ctx) => {
   let path = resolvePath(location.pathname);
 
   function navigate(to: string) {

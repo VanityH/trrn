@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface PagerProps {
   page: number;
@@ -8,7 +7,7 @@ interface PagerProps {
   onChange: (page: number) => void;
 }
 
-export const Pager = defineComponent<PagerProps>(function (_, __: Ctx) {
+export const Pager = defineComponent<PagerProps>(() => {
   return (p) => {
     const totalPages = Math.max(1, Math.ceil(p.total / p.pageSize));
 

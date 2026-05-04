@@ -1,5 +1,4 @@
 import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
 
 interface ButtonProps {
   variant?: "primary" | "secondary" | "danger";
@@ -21,7 +20,7 @@ const sizeStyles: Record<string, string> = {
   lg: "padding:10px 20px;font-size:16px;",
 };
 
-export const Button = defineComponent<ButtonProps>(function (_, __: Ctx) {
+export const Button = defineComponent<ButtonProps>(() => {
   return (p) => {
     const onClk = p.onClick;
     const disabled = p.disabled;

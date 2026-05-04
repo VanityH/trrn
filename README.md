@@ -1,29 +1,20 @@
 # trrn
 
-基于[Preact](https://preactjs.com/)的闭包状态前端框架。无 `useState`、无 hooks、无 `defineComponent`——只有函数和闭包。
+基于 [Preact](https://preactjs.com/) 的闭包状态组件框架。无 `useState`、无 hooks——只有函数和闭包。
 
 ```tsx
-import { render } from "trrn";
+import { defineComponent } from "trrn";
 
-function Counter(props, { update }) {
-  let count = 0; // 闭包 = 状态
+const Counter = defineComponent(({ initial = 0 }, { update }) => {
+  let count = initial; // 闭包 = 状态
 
   return () => (
     <div>
       <span>{count}</span>
-      <button
-        onClick={() => {
-          count++;
-          update();
-        }}
-      >
-        +
-      </button>
+      <button onClick={() => { count++; update(); }}>+</button>
     </div>
   );
-}
-
-render(Counter, document.getElementById("app")!);
+});
 ```
 
 ---
@@ -31,458 +22,341 @@ render(Counter, document.getElementById("app")!);
 ## 目录
 
 - [核心理念](#核心理念)
-- [快速开始](#快速开始)
+- [安装](#安装)
 - [组件模式](#组件模式)
 - [更新机制](#更新机制)
-- [Props 传递与同步](#props-传递与同步)
+- [Props 与数据流](#props-与数据流)
 - [生命周期](#生命周期)
+- [与 Preact 互操作](#与-preact-互操作)
 - [API 参考](#api-参考)
-- [内部架构](#内部架构)
 - [常见陷阱](#常见陷阱)
-- [与 Preact 生态互操作](#与-preact-生态互操作)
-- [框架对比](#框架对比)
 
 ---
 
 ## 核心理念
 
-trrn 的核心思想：**闭包就是状态，函数就是组件**。
+**闭包就是状态。**
 
 ```
-外层 (props, ctx) → render 函数
- │                     │
- │ 执行一次             │ 每次渲染执行
- │ 持有状态             │ 返回 VNode
- │ 注册生命周期         │ 读取最新状态
+defineComponent((props, ctx) => {
+  // ┌─ 工厂函数 ──────────────────────────┐
+  // │ 只执行一次                           │
+  // │ 闭包变量 = 组件状态                  │
+  // │ 注册生命周期回调                     │
+  // └──────────────────────────────────────┘
+
+  return (props) => {
+    // ┌─ render 函数 ──────────────────────┐
+    // │ 每次渲染执行                        │
+    // │ props 始终是最新值                  │
+    // │ 返回 VNode                          │
+    // └─────────────────────────────────────┘
+  };
+});
 ```
 
-- 外层函数中的**闭包变量**就是组件的"状态"——无需 `useState`
+- 外层闭包变量就是组件的"状态"——无需 `useState`
 - 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`、无隐式依赖追踪
-- 组件是**普通函数**——无需 `defineComponent` 包装
+- `defineComponent` 返回**标准 Preact 组件**——与 Preact 生态 100% 互操作
 
 ---
 
-## 快速开始
-
-### 安装
+## 安装
 
 ```bash
 npm install trrn preact
 ```
 
-### tsconfig.json 配置（JSX 支持）
+### tsconfig.json
 
 ```json
 {
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "trrn"
+    "jsxImportSource": "preact"
   }
 }
 ```
 
-### Hello World
+使用 Preact 的 JSX 运行时，trrn 组件是标准 Preact 组件，直接使用 Preact 的 JSX 转换。
+
+### 入口
 
 ```tsx
-import { render } from "trrn";
+import { render, h } from "preact";
+import { App } from "./app.tsx";
 
-function Hello(props, { onMount, update }) {
-  let name = "";
-
-  onMount(() => console.log("DOM 就绪"));
-
-  return () => (
-    <div>
-      <input
-        value={name}
-        onInput={(e) => {
-          name = (e.target as HTMLInputElement).value;
-          update();
-        }}
-      />
-      <p>Hello, {name || "world"}</p>
-    </div>
-  );
-}
-
-render(Hello, document.getElementById("app")!);
+render(h(App, null), document.getElementById("app")!);
 ```
 
-也可使用 `h()` 函数（兼容无 JSX 环境）：
-
-```ts
-import { render, h } from "trrn";
-
-function Counter(props, { update }) {
-  let count = 0;
-  return () =>
-    h(
-      "div",
-      null,
-      h("span", null, String(count)),
-      h(
-        "button",
-        {
-          onClick: () => {
-            count++;
-            update();
-          },
-        },
-        "+",
-      ),
-    );
-}
-```
-
-### 与 vanity-h 配合（可选）
-
-trrn 原生兼容 [vanity-h](https://github.com/VanityH/vanityh) 链式 DSL：
-
-```ts
-import { h } from "trrn";
-import createVanity from "vanity-h";
-
-const { div, span, button, input } = createVanity(h);
-
-function Comp(props, { update }) {
-  let count = 0;
-  return () =>
-    div.class("counter")(
-      span(String(count)),
-      button.onClick(() => {
-        count++;
-        update();
-      })("+"),
-    );
-}
-```
-
-详见 [vanity-h 文档](https://github.com/VanityH/vanityh)。
+> trrn 不提供 `render` 和 `h`——直接使用 Preact 原生 API。
 
 ---
 
 ## 组件模式
 
-### 基本结构
+### 基础
 
 ```tsx
-function MyComponent(
-  { initial }: { initial?: number },
-  { onMount, onUnmount, update }: Ctx,
-): RenderFn {
-  // ═══ 外层：只执行一次 ═══
-  // - 闭包变量 = 状态
-  // - 异步请求、定时器
-  // - 注册生命周期
-  // - 外层 props 解构 = 初始值
+const Greeting = defineComponent(({ name }: { name: string }) => {
+  return () => <div>Hello, {name}!</div>;
+});
+```
 
-  let count = initial ?? 0;
+不需要 ctx 时，省略第二个参数。不需要初始 props 时，使用 `_` 占位：
+
+```tsx
+const Timer = defineComponent((_, { onMount, onUnmount, update }) => {
+  let seconds = 0;
+  let timerId: ReturnType<typeof setInterval>;
 
   onMount(() => {
-    /* DOM 就绪 */
+    timerId = setInterval(() => { seconds++; update(); }, 1000);
   });
-  onUnmount(() => {
-    /* 清理 */
-  });
+  onUnmount(() => clearInterval(timerId));
 
-  // ═══ render 函数：每次渲染执行 ═══
-  // render 函数参数解构 = 每次渲染的最新值
-  return () => {
-    return <div>{/* ... */}</div>;
-  };
-}
+  return () => <div>{seconds}s</div>;
+});
 ```
 
-### 外层 vs 内层的 props
+### 闭包状态
 
-这是一个容易混淆的关键点：
-
-|          | 外层 `props`           | render 函数 `props`                          |
-| -------- | ---------------------- | -------------------------------------------- |
-| 执行次数 | **1 次**（组件挂载时） | **每次渲染**                                 |
-| 更新方式 | 永远不变               | 父组件重渲染或 `ctx.update(newProps)` 后更新 |
-| 推荐用法 | 初始解构、默认值       | 读取渲染时最新数据                           |
+外层函数的变量就是组件的全部状态。读取直接使用变量名，修改后调用 `update()`：
 
 ```tsx
-function Card(props, { update }: Ctx) {
-  // 外层 props：只拿初始值，适合设置默认值
-  const defaultTitle = props?.title ?? "Untitled";
-
-  return (latest) => {
-    // render 函数的 props：每次渲染最新值
-    // ✗ props.title    ← 永远是最初的值！
-    // ✓ (latest as any).title  ← 最新值
-    return <div>{/* ... */}</div>;
-  };
-}
-```
-
-### 同名解构模式
-
-trrn 的两层函数各有独立的作用域，外层和 render 函数参数可以**同名解构**——JavaScript 的作用域规则确保各自取到正确的值：
-
-```tsx
-function Comp({ text }) {
-  console.log(text); // 第一次渲染（初始值）
-
-  return ({ text }) => {
-    console.log(text); // 每次渲染（最新值）
-    return <div>{text}</div>;
-  };
-}
-```
-
-**外层解构用于初始读取，render 函数解构用于渲染时读取最新值。** 两者同名但值不同，这是 JS 函数作用域的自然行为，也是 trrn 两层组件模式带来的便利。
-
-### 闭包变量
-
-外层函数的变量就是组件的状态：
-
-```tsx
-function List(props, { update }) {
+const TodoList = defineComponent((_, { update }) => {
   let items = [{ id: 1, text: "a" }];
-  let selectedId = -1;
+  let input = "";
 
   const addItem = () => {
-    items = [...items, { id: Date.now(), text: "new" }];
+    items = [...items, { id: Date.now(), text: input }];
+    input = "";
     update();
   };
 
   return () => (
-    <ul>
-      {items.map((item) => (
-        <li
-          key={item.id}
-          onClick={() => {
-            selectedId = item.id;
-            update();
-          }}
-        >
-          {item.text}
-        </li>
-      ))}
-    </ul>
+    <div>
+      <input value={input} onInput={(e) => { input = (e.target as HTMLInputElement).value; update(); }} />
+      <button onClick={addItem}>添加</button>
+      <ul>{items.map((item) => <li key={item.id}>{item.text}</li>)}</ul>
+    </div>
   );
-}
+});
+```
+
+### 嵌套组件
+
+子组件通过 render 函数的 props 参数接收最新数据。父组件触发 `update()` 后，新 JSX props 自动传入子组件：
+
+```tsx
+const Child = defineComponent(({ label }: { label: string }) => {
+  return (p) => <span>{p.label}</span>;
+});
+
+const Parent = defineComponent((_, { update }) => {
+  let value = "";
+  return () => (
+    <div>
+      <input onInput={(e) => { value = (e.target as HTMLInputElement).value; update(); }} />
+      <Child label={value} />
+    </div>
+  );
+});
+```
+
+### 状态提升
+
+复杂交互场景推荐将状态提升到父组件管理，子组件通过回调通知父组件：
+
+```tsx
+const KanbanColumn = defineComponent(({ collapsed, onToggle }: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) => {
+  return (p) => (
+    <div>
+      <button onClick={p.onToggle}>{p.collapsed ? "展开" : "折叠"}</button>
+      {!p.collapsed && <div>内容</div>}
+    </div>
+  );
+});
+
+const Board = defineComponent((_, { update }) => {
+  let collapsed = false;
+  return () => (
+    <KanbanColumn collapsed={collapsed} onToggle={() => { collapsed = !collapsed; update(); }} />
+  );
+});
 ```
 
 ---
 
 ## 更新机制
 
-### 核心流程
+### ctx.update()
+
+调用 `update()` 触发组件重渲染，render 函数重新执行并返回新 VNode：
 
 ```tsx
-function Adapter(props) {
-  const [, tick] = useState(0);
-  const propsRef = useRef(undefined);
-  const internalRef = useRef(false);
+let count = 0;
 
-  // 父组件重渲染 → internalRef=false → 用父级新 props 覆盖
-  if (!internalRef.current) {
-    propsRef.current = props;
-  }
-  internalRef.current = false;
-
-  // ctx.update() 流程：
-  const ctx = {
-    update(newProps) {
-      internalRef.current = true; // 标记为内部更新
-      if (newProps) {
-        propsRef.current = { ...propsRef.current, ...newProps }; // 合并新 props
-      }
-      tick((n) => n + 1); // 触发 Preact 重渲染
-    },
-  };
-
-  // 外层函数只执行一次
-  if (!renderFnRef.current) {
-    renderFnRef.current = type(props, ctx);
-  }
-
-  // 每次渲染调用 render 函数
-  return renderFnRef.current(propsRef.current);
-}
-```
-
-### 三种渲染触发方式
-
-| 方式                       | internalRef | propsRef 行为                                     |
-| -------------------------- | ----------- | ------------------------------------------------- |
-| **父组件重渲染**           | false       | `propsRef.current = props`（用新 JSX props 覆盖） |
-| **`ctx.update()`**         | true        | 跳过覆盖，保持当前 propsRef                       |
-| **`ctx.update(newProps)`** | true        | `newProps` 合并到 propsRef                        |
-
-### 事件处理器中的更新
-
-```tsx
-function Comp(props, { update }: Ctx) {
-  let count = 0;
-
-  // ✗ 错误：修改了闭包变量但没有触发重渲染
-  const badHandler = () => {
-    count++;
-  };
-
-  // ✓ 正确：修改后调用 update()
-  const goodHandler = () => {
-    count++;
-    update();
-  };
-
-  // ✓ 也可用 action() 包装器（自动调用 update()）
-  const actionHandler = action(update as any, () => {
-    count++;
-  });
-
-  return () => <button onClick={goodHandler}>{count}</button>;
-}
-```
-
-**关键规则：只有 `ctx.update()` 能触发渲染。修改闭包变量本身不会更新 UI。**
-
-### action() 包装器
-
-`action(ctx, fn)` 返回一个自动调用 `ctx.update()` 的事件处理器：
-
-```ts
-import { action } from "trrn";
-
-// 不用 action：手动 update
+// 正确：修改闭包后 update()
 <button onClick={() => { count++; update(); }} />
 
-// 用 action：自动 update
-<button onClick={action(ctx, () => { count++; })} />
-
-// 多层状态变更：一次 update 即可
-<button onClick={action(ctx, () => { a++; b += 2; })} />
+// 错误：只改闭包不 update()，视图不会更新
+<button onClick={() => { count++; }} />
 ```
 
----
-
-## Props 传递与同步
-
-### 父传子
-
-```tsx
-function Parent(props, { update }) {
-  let value = "";
-
-  return () => (
-    <div>
-      <input
-        onInput={(e) => {
-          value = e.target.value;
-          update();
-        }}
-      />
-      <Child label={value} /> {/* 每次父组件 re-render，Child 的 adapter 收到新 props */}
-    </div>
-  );
-}
-
-// 子组件通过 render 函数的参数解构接收最新 props
-function Child(props, ctx) {
-  return ({ label }: any) => {
-    // 每次父组件重渲染，label 都是最新值
-    return <span>{label}</span>;
-  };
-}
-```
+**任何需要反映在 UI 上的闭包变量变更，后面必须跟 `ctx.update()`。**
 
 ### ctx.update(newProps)
 
-用于组件内部更新自己的 props（也供父组件通过 `update(newProps)` 推送数据给子组件）：
+合并新 props 到当前 props，常用于组件内部覆盖传入的 props：
 
 ```tsx
-function Comp(props, { update }) {
-  return (latestProps) => (
-    <div>
-      <span>{(latestProps as any).page ?? 1}</span>
-      <button onClick={() => update({ page: 2 })}>Go to page 2</button>
-    </div>
-  );
-}
+defineComponent(({ page = 1 }) => {
+  return (p) => <button onClick={() => update({ page: 2 })}>第 {p.page} 页</button>;
+});
 ```
 
-### 完整数据流
+### action() 包装器
+
+自动在事件处理器执行后调用 `ctx.update()`，减少样板代码：
+
+```tsx
+import { action } from "trrn";
+
+// 不用 action
+<button onClick={() => { count++; update(); }} />
+
+// 用 action
+<button onClick={action(ctx, () => { count++; })} />
+```
+
+`action()` 使用 try-finally 确保即使处理器抛出异常也会触发 update。
+
+---
+
+## Props 与数据流
+
+### 父传子
+
+父组件 `update()` → Preact 重渲染 → 新 JSX props 传入子组件：
 
 ```
 父组件调用 update()
-  └─ tick(n+1) → Preact 重渲染父组件 adapter
-      └─ renderFn 返回新 VNode，其中包含 <Child newProp={x} />
-          └─ Preact 复用 Child adapter，传入新 props
-              └─ Child adapter: internalRef=false → propsRef = newProps
-                  └─ renderFn(propsRef) → Child render 函数参数 = 最新 props
+  └─ Preact 重渲染父组件，生成新 VNode
+      └─ <Child label={value} /> 传入新 props
+          └─ Child 的 render 函数参数 label = 最新值
 ```
 
-这就是**render 函数的 props 参数始终是最新值**的原理。
+### render 函数的参数 = 最新 props
+
+render 函数每次渲染执行，其 props 参数始终是**最新值**：
+
+```tsx
+defineComponent(({ title }: { title: string }) => {
+  // 外层 title = 初始值（只执行一次）
+  return (p) => {
+    // p.title = 最新值（每次渲染）
+    return <div>{p.title}</div>;
+  };
+});
+```
+
+### internalRef 机制
+
+`defineComponent` 内部通过 `internalRef` 区分"父组件重渲染"和"自身 update"：
+
+- 父组件重渲染 → `internalRef = false` → propsRef 被新 props 覆盖
+- `ctx.update()` 触发 → `internalRef = true` → propsRef 保持不变
+- `ctx.update(newProps)` → newProps 合并到 propsRef
 
 ---
 
 ## 生命周期
 
-### ctx.onMount(fn)
+### onMount
 
-DOM 挂载后执行一次：
+DOM 挂载后执行一次，适合做数据请求、DOM 操作、注册定时器：
 
 ```tsx
-ctx.onMount(() => {
-  document.querySelector("input")?.focus();
-  startAnimation();
+onMount(() => {
+  fetchData().then((result) => { data = result; update(); });
 });
 ```
 
-### ctx.onUnmount(fn)
+### onUnmount
 
 组件卸载时执行清理：
 
 ```tsx
-ctx.onUnmount(() => {
+onUnmount(() => {
   clearInterval(timerId);
   removeEventListener("scroll", handler);
 });
 ```
 
-### 结合使用
+可以多次调用，所有回调都会在卸载时执行：
 
 ```tsx
-function Timer(props, { onMount, onUnmount, update }) {
-  let seconds = 0;
-  let timerId;
-
-  onMount(() => {
-    timerId = setInterval(() => {
-      seconds++;
-      update();
-    }, 1000);
-  });
-
-  onUnmount(() => {
-    clearInterval(timerId);
-  });
-
-  return () => <div>{seconds}s</div>;
-}
+const Comp = defineComponent((_, { onMount, onUnmount }) => {
+  onMount(() => { /* 初始化 A */ });
+  onUnmount(() => { /* 清理 A */ });
+  onUnmount(() => { /* 清理 B */ });
+});
 ```
+
+---
+
+## 与 Preact 互操作
+
+`defineComponent` 返回**标准 Preact 组件**，与 Preact 生态完全兼容：
+
+```tsx
+import { defineComponent } from "trrn";
+import { Router } from "preact-iso";
+import { useRoute } from "preact-iso";
+
+// trrn 组件
+const Page = defineComponent(() => {
+  return () => <div>Hello</div>;
+});
+
+// Preact hooks 组件
+function Sidebar() {
+  const { path } = useRoute();
+  return <nav>{path}</nav>;
+}
+
+// 混用，无差别
+const App = defineComponent(() => {
+  return () => (
+    <Router>
+      <Page path="/" />
+      <Sidebar path="/sidebar" />
+    </Router>
+  );
+});
+```
+
+- 可直接使用 Preact hooks（`useState`、`useEffect` 等）——但既然用了 trrn 就不需要了
+- 可直接使用 Preact Context、错误边界、Suspense
+- 第三方 Preact 库无需任何适配层
 
 ---
 
 ## API 参考
 
-### 框架导出
+### 导出
 
-| 导出                              | 说明                                    |
-| --------------------------------- | --------------------------------------- |
-| `render(Comp, container, props?)` | 挂载组件到 DOM                          |
-| `h(type, props, ...children)`     | 创建 VNode（自动适配 trrn/Preact 组件） |
-| `action(ctx, fn)`                 | 事件处理器包装器，执行后自动 `update()` |
-| `createContext(defaultValue)`     | 创建 Context                            |
-| `ErrorBoundary`                   | 错误边界（Preact class 组件）           |
-| `StrictMode`                      | 开发辅助（double-invoke render）        |
-| `TRRN_MARKER`                     | 显式组件标记 Symbol                     |
+| 导出 | 说明 |
+|------|------|
+| `defineComponent(factory)` | 定义 trrn 组件，返回标准 Preact 组件 |
+| `action(ctx, fn)` | 事件包装器，执行后自动 `update()` |
+| `ErrorBoundary` | 错误边界（Preact class 组件） |
 
-### ctx 对象
+### Ctx 接口
 
 ```ts
 interface Ctx {
@@ -490,47 +364,20 @@ interface Ctx {
   update(newProps?: Record<string, unknown>): void;
   /** DOM 挂载后回调 */
   onMount(fn: () => void): void;
-  /** 卸载清理回调 */
+  /** 卸载时清理回调（支持多次调用） */
   onUnmount(fn: () => void): void;
-  /** 读取 Context 值 */
-  consume<T>(context: Context<T>): T;
 }
 ```
 
 ### 类型
 
-| 类型                | 说明                                                 |
-| ------------------- | ---------------------------------------------------- |
-| `Component<P>`      | `(props: P \| undefined, ctx: Ctx) => RenderFn<P>`   |
-| `RenderFn<P>`       | `(props: P \| undefined) => ComponentChildren`       |
-| `Ctx`               | 组件上下文（update / onMount / onUnmount / consume） |
-| `PropsOf<T>`        | 提取组件 Props 类型                                  |
-| `RenderResultOf<T>` | 提取 render 函数返回类型                             |
-
-### createContext
-
-```ts
-const Theme = createContext("light");
-
-// Provider（JSX）
-<ThemeCtx.Provider value="dark">
-  <Child />
-</ThemeCtx.Provider>
-
-// Consumer
-function Themed(props, ctx) {
-  return () => {
-    const theme = ctx.consume(ThemeCtx);
-    return <div class={theme}>themed content</div>;
-  };
-}
-```
-
-无 Provider 包裹时，`consume` 返回 `defaultValue`。
+| 类型 | 说明 |
+|------|------|
+| `Ctx` | 组件上下文（update / onMount / onUnmount） |
+| `RenderFn<P>` | `(props: P) => ComponentChildren` |
+| `ComponentFn<P>` | `(props: P, ctx: Ctx) => RenderFn<P>` |
 
 ### ErrorBoundary
-
-捕获子组件渲染错误：
 
 ```tsx
 import { ErrorBoundary } from "trrn";
@@ -544,198 +391,47 @@ import { ErrorBoundary } from "trrn";
   )}
 >
   <RiskyComponent />
-</ErrorBoundary>;
+</ErrorBoundary>
 ```
-
-`fallback` 接收两个参数：
-
-- `error` — 捕获到的 Error 对象
-- `reset` — 重设错误状态，重新挂载子树
-
-### StrictMode
-
-开发模式 double-invoke render 函数以检测副作用：
-
-```tsx
-<StrictMode>
-  <App />
-</StrictMode>
-```
-
-生产构建中移除。
-
-### TRRN_MARKER
-
-显式标记函数为 trrn 组件（跳过自动检测）：
-
-```tsx
-import { TRRN_MARKER } from "trrn";
-
-function MyComponent(props, ctx) {
-  return () => <div />;
-}
-(MyComponent as any)[TRRN_MARKER] = true;
-```
-
----
-
-## 内部架构
-
-```
-src/
-  index.ts           — 导出所有公共 API
-  types.ts           — Ctx, RenderFn, Component, Context 等类型定义
-  adapter.ts         — createTrrnAdapter(), getAdapter(), isTrrnComponent()
-  h.ts               — h() 函数（trrn 组件 / HTML / Preact 三路自动适配）
-  render.ts          — render() 根挂载
-  action.ts          — action() 事件包装器
-  context.ts         — createContext(), resolveContext(), createConsume()
-  error-boundary.ts  — ErrorBoundary（Preact class 组件）
-  strict-mode.ts     — StrictMode 开发辅助
-  warnings.ts        — 开发警告（update-during-render, unmounted-update）
-  jsx-runtime.ts     — JSX 运行时（react-jsx 模式）
-```
-
-### 适配器流程
-
-```
-h(Component, props, children)
-  │
-  ▼
-getAdapter(Component)
-  ├── 有缓存（WeakMap）→ 返回缓存的 Adapter
-  └── 无缓存
-      ├── isTrrnComponent(Component)?
-      │   ├── TRRN_MARKER 显式标记 → 按标记
-      │   ├── function.length >= 2 → trrn 组件（props + ctx）
-      │   └── length < 2 → 运行时探测
-      ├── trrn → createTrrnAdapter(Component)
-      │          ├── useState → tick (forceUpdate)
-      │          ├── useRef → renderFn, propsRef, internalRef
-      │          ├── useEffect → onMount, onUnmount
-      │          ├── resolveContext → 预收集 context 值
-      │          └── renderingRef → 跟踪渲染阶段
-      ├── class 组件（prototype.render）→ PreactPassthrough
-      └── Preact → PreactPassthrough
-                   └── preactH(Component, props)
-```
-
-### Props 同步机制
-
-```
-父组件重渲染：
-  Adapter(props)  → internalRef=false → propsRef = props → renderFn(propsRef)
-
-ctx.update()：
-  update()        → internalRef=true → tick(n+1) → Adapter(props)
-                   → internalRef=true → 跳过 propsRef = props → 使用当前 propsRef
-
-ctx.update(newProps)：
-  update({x:1})   → internalRef=true → propsRef = {...propsRef, ...newProps}
-                   → tick(n+1) → 跳过父组件 props 覆盖
-```
-
-### 组件检测优先级
-
-1. **TRRN_MARKER Symbol**（最高优先级）
-   - `true` → trrn 组件
-   - `false` → 非 trrn 组件（如 ErrorBoundary 显式标记为 false）
-2. **Class 组件检测** — `type.prototype?.render` → PreactPassthrough
-3. **参数数量启发式** — `type.length >= 2` → trrn 组件
-4. **运行时探测** — 调用 `type({}, probeCtx)` 判断返回是否为函数
 
 ---
 
 ## 常见陷阱
 
-### 1. 修改了闭包变量但没有调用 ctx.update()
+### 1. 修改了闭包但没有 update()
 
 ```tsx
-// ✗ 错误：count 变了但视图不变
 let count = 0;
-<button onClick={() => { count++; }} />
-
-// ✓ 正确
-<button onClick={() => { count++; update(); }} />
+<button onClick={() => { count++; }} />       // ✗ 视图不变
+<button onClick={() => { count++; update(); }} /> // ✓
 ```
 
-**任何需要反映在 UI 上的闭包变量变更，后面必须跟 `ctx.update()`。**
-
-### 2. 混淆外层初始值和 render 最新值
-
-参见[外层 vs 内层的 props](#外层-vs-内层的-props)和[同名解构模式](#同名解构模式)。
-
-### 3. 在 render 函数中调用 ctx.update()
+### 2. 在 render 函数中调用 update()
 
 ```tsx
 return () => {
-  update(); // ✗ 会造成无限循环！
+  update(); // ✗ 无限循环！
   return <div />;
 };
 ```
 
-`ctx.update()` 只能在事件处理器、异步回调中调用。如果在渲染过程中调用，trrn 会在开发模式下给出警告。
+`update()` 只能在事件处理器、异步回调、生命周期中调用。
+
+### 3. 使用外层 props 而非最新 props
+
+```tsx
+defineComponent(({ label }: { label: string }) => {
+  return () => <div>{label}</div>; // ✗ label 永远是初始值
+});
+
+defineComponent(({ label }: { label: string }) => {
+  return (p) => <div>{p.label}</div>; // ✓ p.label 是最新值
+});
+```
 
 ### 4. 列表渲染忘记 key
 
-```tsx
-{
-  items.map((item) => <li>{item.text}</li>);
-} // ✗ 缺少 key
-{
-  items.map((item) => <li key={item.id}>{item.text}</li>);
-} // ✓
-```
-
----
-
-## 与 Preact 生态互操作
-
-trrn 的 `h()` 自动适配标准 Preact 组件，任何 Preact hooks 组件、第三方库均可直接使用：
-
-```tsx
-import { Router } from "preact-iso";
-
-<Router>
-  <TrrnPage path="/" /> {/* trrn 组件 */}
-  <PreactPage path="/about" /> {/* Preact hooks 组件 */}
-</Router>;
-```
-
-适配规则：
-
-- trrn 组件：通过 `getAdapter` 包装后渲染
-- Preact 组件：通过 `PreactPassthrough` 原生渲染
-- 所有 Preact hooks、`preact/compat`（React 兼容层）均可直接使用
-
----
-
-## 框架对比
-
-| 特性       | trrn                               | React/Preact                   |
-| ---------- | ---------------------------------- | ------------------------------ |
-| 状态管理   | 闭包变量                           | `useState` / `useReducer`      |
-| 触发更新   | `ctx.update()`                     | `setState` / `dispatch`        |
-| 组件定义   | `(props, ctx) => (props) => VNode` | `(props) => VNode`（函数组件） |
-| Hooks 规则 | 无限制（外层即初始化）             | 必须顺序调用                   |
-| 依赖数组   | 无（闭包自动捕获）                 | 手动声明                       |
-| 生命周期   | `onMount` / `onUnmount`            | `useEffect`                    |
-| Context    | `ctx.consume()`                    | `useContext()`                 |
-| 错误边界   | `ErrorBoundary`                    | `componentDidCatch`            |
-| 状态初始化 | 外层必然执行一次                   | `useState` 惰性初始化可选      |
-
-### 何时使用 trrn
-
-- 想要闭包自然的变量作用域，不想管理依赖数组
-- 希望状态更新是显式的（`ctx.update()`），而非响应式追踪
-- 想用普通函数写组件，无需 `defineComponent` 包装
-- 已经在用 Preact 生态，想用更轻量的组件模式
-
-### 注意
-
-- 不直接支持 `async (props) => VNode` 模式，推荐外层异步 + `ctx.update()`
-- Preact 11 beta 在 jsdom 中 `componentDidCatch` 不可用（不影响浏览器环境）
-- SSR 支持目前未完整验证
+Preact 依赖 key 优化列表 diff，任何时候使用 `.map()` 渲染列表都要加 key。
 
 ---
 
