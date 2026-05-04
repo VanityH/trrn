@@ -5,7 +5,7 @@
 ```tsx
 import { render } from "trrn";
 
-function Counter(_props, { update }) {
+function Counter(props, { update }) {
   let count = 0; // 闭包 = 状态
 
   return () => (
@@ -86,7 +86,7 @@ npm install trrn preact
 ```tsx
 import { render } from "trrn";
 
-function Hello(_props, { onMount, update }) {
+function Hello(props, { onMount, update }) {
   let name = "";
 
   onMount(() => console.log("DOM 就绪"));
@@ -113,7 +113,7 @@ render(Hello, document.getElementById("app")!);
 ```ts
 import { render, h } from "trrn";
 
-function Counter(_props, { update }) {
+function Counter(props, { update }) {
   let count = 0;
   return () =>
     h(
@@ -144,7 +144,7 @@ import createVanity from "vanity-h";
 
 const { div, span, button, input } = createVanity(h);
 
-function Comp(_props, { update }) {
+function Comp(props, { update }) {
   let count = 0;
   return () =>
     div.class("counter")(
@@ -204,13 +204,13 @@ function MyComponent(
 | 推荐用法 | 初始解构、默认值       | 读取渲染时最新数据                           |
 
 ```tsx
-function Card(_props, { update }: Ctx) {
+function Card(props, { update }: Ctx) {
   // 外层 props：只拿初始值，适合设置默认值
-  const defaultTitle = _props?.title ?? "Untitled";
+  const defaultTitle = props?.title ?? "Untitled";
 
   return (latest) => {
     // render 函数的 props：每次渲染最新值
-    // ✗ _props.title    ← 永远是最初的值！
+    // ✗ props.title    ← 永远是最初的值！
     // ✓ (latest as any).title  ← 最新值
     return <div>{/* ... */}</div>;
   };
@@ -219,36 +219,27 @@ function Card(_props, { update }: Ctx) {
 
 ### 同名解构模式
 
-利用 JavaScript 的作用域规则，外层和 render 函数可以用**同名变量**解构 props —— 它们处在不同的函数作用域中，各自取到正确的值：
+trrn 的两层函数各有独立的作用域，外层和 render 函数参数可以**同名解构**——JavaScript 的作用域规则确保各自取到正确的值：
 
 ```tsx
-function Card({ title, count }: Props, { update }: Ctx) {
-  // 外层作用域：title, count = 初始值（只执行一次）
-  let inner = count;
+function Comp({ text }) {
+  console.log(text); // 第一次渲染（初始值）
 
-  return ({ title, count }: Props) => {
-    // render 函数作用域：title, count = 每次渲染的最新值
-    // 这里的 title/count 会遮蔽外层的同名变量
-    // JS 作用域规则确保：外层 ↑ 拿初始值，内层 ↑ 拿最新值，互不干扰
-    return (
-      <div>
-        <h2>{title}</h2>
-        <p>外层 count: {inner}</p> {/* 永远是最初的值 */}
-        <p>render count: {count}</p> {/* 每次渲染的最新值 */}
-      </div>
-    );
+  return ({ text }) => {
+    console.log(text); // 每次渲染（最新值）
+    return <div>{text}</div>;
   };
 }
 ```
 
-**外层解构用于初始读取，render 函数解构用于渲染时读取最新值。** 两者同名但值不同——这是 trrn 两层组件模式的自然结果，也是 JS 函数作用域的正常行为。
+**外层解构用于初始读取，render 函数解构用于渲染时读取最新值。** 两者同名但值不同，这是 JS 函数作用域的自然行为，也是 trrn 两层组件模式带来的便利。
 
 ### 闭包变量
 
 外层函数的变量就是组件的状态：
 
 ```tsx
-function List(_props, { update }) {
+function List(props, { update }) {
   let items = [{ id: 1, text: "a" }];
   let selectedId = -1;
 
@@ -325,7 +316,7 @@ function Adapter(props) {
 ### 事件处理器中的更新
 
 ```tsx
-function Comp(_props, { update }: Ctx) {
+function Comp(props, { update }: Ctx) {
   let count = 0;
 
   // ✗ 错误：修改了闭包变量但没有触发重渲染
@@ -374,7 +365,7 @@ import { action } from "trrn";
 ### 父传子
 
 ```tsx
-function Parent(_props, { update }) {
+function Parent(props, { update }) {
   let value = "";
 
   return () => (
@@ -391,7 +382,7 @@ function Parent(_props, { update }) {
 }
 
 // 子组件通过 render 函数的参数解构接收最新 props
-function Child(_props, _ctx) {
+function Child(props, ctx) {
   return ({ label }: any) => {
     // 每次父组件重渲染，label 都是最新值
     return <span>{label}</span>;
@@ -456,7 +447,7 @@ ctx.onUnmount(() => {
 ### 结合使用
 
 ```tsx
-function Timer(_props, { onMount, onUnmount, update }) {
+function Timer(props, { onMount, onUnmount, update }) {
   let seconds = 0;
   let timerId;
 
@@ -527,7 +518,7 @@ const Theme = createContext("light");
 </ThemeCtx.Provider>
 
 // Consumer
-function Themed(_props, ctx) {
+function Themed(props, ctx) {
   return () => {
     const theme = ctx.consume(ThemeCtx);
     return <div class={theme}>themed content</div>;
