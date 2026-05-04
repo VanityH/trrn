@@ -1,5 +1,5 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  oxc: { jsx: { importSource: "trrn" } },
+  oxc: { jsx: { importSource: "preact" } },
 });
