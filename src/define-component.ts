@@ -20,7 +20,7 @@ import type { Ctx, ComponentFn } from "./types.ts";
  * });
  * ```
  */
-export function defineComponent<P extends Record<string, unknown> = Record<string, unknown>>(
+export function defineComponent<P extends object = Record<string, unknown>>(
   factory: ComponentFn<P>,
 ): (props: P) => ComponentChildren {
   return function TrrnComponent(props: P) {
