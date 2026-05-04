@@ -59,7 +59,7 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12
     devDependencies:
-      trrn:
+      trrn-h:
         specifier: 'workspace:'
         version: link:..
       typescript:

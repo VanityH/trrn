@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import type { Task } from "../../mock/types.ts";
 import { fetchTasks } from "../../mock/api.ts";
 

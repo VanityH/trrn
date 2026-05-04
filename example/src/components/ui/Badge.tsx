@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 
 interface BadgeProps {
   variant?: "default" | "success" | "warning" | "danger";

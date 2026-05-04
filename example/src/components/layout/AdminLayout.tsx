@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { useLocation } from "preact-iso";
 
 interface AdminLayoutProps {
@@ -26,7 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
 export const AdminLayout = defineComponent<AdminLayoutProps>(() => {
   return (p) => {
     const { url, route } = useLocation();
-    const title = PAGE_TITLES[url] ?? "trrn";
+    const title = PAGE_TITLES[url] ?? "trrn-h";
 
     return (
       <div style={{ display: "flex", minHeight: "100vh", background: "#f9fafb" }}>
@@ -38,7 +38,7 @@ export const AdminLayout = defineComponent<AdminLayoutProps>(() => {
               marginBottom: "8px",
             }}
           >
-            <strong style={{ fontSize: "18px", color: "#6366f1" }}>trrn</strong>
+            <strong style={{ fontSize: "18px", color: "#6366f1" }}>trrn-h</strong>
             <span style={{ fontSize: "12px", color: "#9ca3af", marginLeft: "6px" }}>demo</span>
           </div>
           {SIDEBAR_ITEMS.map((item) => (

@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { createStore } from "zustand/vanilla";
 
 interface CounterStore {

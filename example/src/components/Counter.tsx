@@ -1,5 +1,5 @@
-import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
+import { defineComponent } from "trrn-h";
+import type { Ctx } from "trrn-h";
 
 interface CounterProps {
   initial?: number;

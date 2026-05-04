@@ -1,5 +1,5 @@
 {
-  "name": "trrn",
+  "name": "trrn-h",
   "version": "0.0.1",
   "description": "Closure-based Preact component wrapper. No useState, no hooks — just functions and closures.",
   "keywords": [
@@ -11,15 +11,15 @@
     "state management",
     "ui"
   ],
-  "homepage": "https://github.com/VanityH/trrn#readme",
+  "homepage": "https://github.com/VanityH/trrn-h#readme",
   "bugs": {
-    "url": "https://github.com/VanityH/trrn/issues"
+    "url": "https://github.com/VanityH/trrn-h/issues"
   },
   "license": "MIT",
   "author": "Himavanta@foxmail.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VanityH/trrn.git"
+    "url": "git+https://github.com/VanityH/trrn-h.git"
   },
   "files": [
     "dist"

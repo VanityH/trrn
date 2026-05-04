@@ -1,8 +1,8 @@
-import { defineComponent } from "trrn";
-import type { Ctx } from "trrn";
+import { defineComponent } from "trrn-h";
+import type { Ctx } from "trrn-h";
 import { h } from "preact";
-import { ErrorBoundary } from "trrn";
-import type { ErrorBoundaryProps } from "trrn";
+import { ErrorBoundary } from "trrn-h";
+import type { ErrorBoundaryProps } from "trrn-h";
 import { Card } from "../../components/ui/Card.tsx";
 import { FormField } from "../../components/ui/FormField.tsx";
 import { Button } from "../../components/ui/Button.tsx";

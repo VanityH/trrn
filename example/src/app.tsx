@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { Router, Route, LocationProvider } from "preact-iso";
 import { AdminLayout } from "./components/layout/AdminLayout.tsx";
 import { AnalyticsPage } from "./pages/admin/Analytics.tsx";

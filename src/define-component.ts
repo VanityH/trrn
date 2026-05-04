@@ -3,7 +3,7 @@ import type { ComponentChildren } from "preact";
 import type { Ctx, ComponentFn } from "./types.ts";
 
 /**
- * 定义一个 trrn 组件。
+ * 定义一个 trrn-h 组件。
  *
  * factory 函数接收 (props, ctx)，返回 render 函数。
  * factory 只执行一次（持有闭包状态），render 函数每次渲染执行。

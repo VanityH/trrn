@@ -10,7 +10,7 @@ const isDev = typeof __DEV__ !== "undefined" ? __DEV__ : true;
 
 function warn(message: string): void {
   if (isDev) {
-    console.warn(`[trrn] ${message}`);
+    console.warn(`[trrn-h] ${message}`);
   }
 }
 

@@ -1,9 +1,9 @@
-# trrn
+# trrn-h
 
 **Preact 闭包组件包装器** — 用闭包变量替代 hooks。实验性项目。
 
 ```tsx
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 
 const Counter = defineComponent(({ initial = 0 }, { update }) => {
   let count = initial; // 闭包 = 状态
@@ -24,7 +24,7 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 });
 ```
 
-> trrn 是一个实验性探索，代码和文档由 AI 辅助生成。它不对应某个生产框架，只是对"闭包驱动 UI"这个思路的尝试。不适合生产使用。
+> trrn-h 是一个实验性探索，代码和文档由 AI 辅助生成。它不对应某个生产框架，只是对"闭包驱动 UI"这个思路的尝试。不适合生产使用。
 
 ---
 
@@ -70,14 +70,14 @@ defineComponent((props, ctx) => {
 - 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`、无隐式依赖追踪
 - `defineComponent` 返回**标准 Preact 组件**——与 Preact 生态 100% 互操作
 
-trrn 本身不做渲染、不做路由、不做状态管理——这些全部交给 Preact。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
+trrn-h 本身不做渲染、不做路由、不做状态管理——这些全部交给 Preact。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
 
 ---
 
 ## 安装
 
 ```bash
-npm install trrn preact
+npm install trrn-h preact
 ```
 
 ### tsconfig.json
@@ -91,7 +91,7 @@ npm install trrn preact
 }
 ```
 
-使用 Preact 的 JSX 运行时，trrn 组件是标准 Preact 组件，直接使用 Preact 的 JSX 转换。
+使用 Preact 的 JSX 运行时，trrn-h 组件是标准 Preact 组件，直接使用 Preact 的 JSX 转换。
 
 ### 入口
 
@@ -102,7 +102,7 @@ import { App } from "./app.tsx";
 render(h(App, null), document.getElementById("app")!);
 ```
 
-> trrn 不提供 `render` 和 `h`——直接使用 Preact 原生 API。
+> trrn-h 不提供 `render` 和 `h`——直接使用 Preact 原生 API。
 
 ---
 
@@ -303,7 +303,7 @@ const Comp = defineComponent((_, { onMount, onUnmount }) => {
 
 ## Render 函数中的 Preact hooks
 
-trrn 组件是标准 Preact 组件，render 函数在渲染时执行，因此其中可以调用所有 Preact hooks。
+trrn-h 组件是标准 Preact 组件，render 函数在渲染时执行，因此其中可以调用所有 Preact hooks。
 
 ```tsx
 const Comp = defineComponent(() => {
@@ -324,10 +324,10 @@ const Comp = defineComponent(() => {
 `defineComponent` 返回**标准 Preact 组件**，与 Preact 生态完全兼容：
 
 ```tsx
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { Router, useRoute } from "preact-iso";
 
-// trrn 组件
+// trrn-h 组件
 const Page = defineComponent(() => {
   return () => <div>Hello</div>;
 });
@@ -349,7 +349,7 @@ const App = defineComponent(() => {
 });
 ```
 
-- 可直接使用 Preact hooks（`useState`、`useEffect` 等）——但既然用了 trrn 就不需要了
+- 可直接使用 Preact hooks（`useState`、`useEffect` 等）——但既然用了 trrn-h 就不需要了
 - 可直接使用 Preact Context、错误边界、Suspense
 - 第三方 Preact 库无需任何适配层
 
@@ -357,7 +357,7 @@ const App = defineComponent(() => {
 
 ## 生态集成
 
-trrn 组件是标准 Preact 组件，render 函数开放所有 Preact hooks，因此可以与多数生态库配合使用。
+trrn-h 组件是标准 Preact 组件，render 函数开放所有 Preact hooks，因此可以与多数生态库配合使用。
 
 ### Zustand — 全局状态管理
 
@@ -414,7 +414,7 @@ vanity-h 仅 186 字节，支持 Preact、React、Vue 等任何 hyperscript 兼�
 
 | 导出                       | 说明                                 |
 | -------------------------- | ------------------------------------ |
-| `defineComponent(factory)` | 定义 trrn 组件，返回标准 Preact 组件 |
+| `defineComponent(factory)` | 定义 trrn-h 组件，返回标准 Preact 组件 |
 | `ErrorBoundary`            | 错误边界（Preact class 组件）        |
 
 ### Ctx 接口
@@ -441,7 +441,7 @@ interface Ctx {
 ### ErrorBoundary
 
 ```tsx
-import { ErrorBoundary } from "trrn";
+import { ErrorBoundary } from "trrn-h";
 
 <ErrorBoundary
   fallback={(err, reset) => (

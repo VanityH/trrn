@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { h } from "preact";
 import createVanity from "vanity-h";
 import { useState } from "preact/hooks";

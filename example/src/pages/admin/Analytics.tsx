@@ -1,4 +1,4 @@
-import { defineComponent } from "trrn";
+import { defineComponent } from "trrn-h";
 import { Card } from "../../components/ui/Card.tsx";
 import { fetchAnalytics } from "../../mock/api.ts";
 import type { AnalyticsData } from "../../mock/types.ts";
