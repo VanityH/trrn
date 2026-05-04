@@ -307,29 +307,10 @@ trrn 组件是标准 Preact 组件，render 函数在渲染时执行，因此其
 ```tsx
 const Comp = defineComponent(() => {
   return () => {
-    const theme = useContext(ThemeCtx);   // Context
+    const theme = useContext(ThemeCtx); // Context
     const items = useMemo(() => heavy(), [deps]); // 性能优化
     return <div>{theme}</div>;
   };
-});
-```
-
-Ref 只是普通 prop，无需 `forwardRef`：
-
-```tsx
-const Input = defineComponent(() => {
-  let el: HTMLInputElement | null = null;
-  return (p) => <input ref={(r) => { el = r; }} />;
-});
-
-const Form = defineComponent(() => {
-  let inputEl: HTMLInputElement | null = null;
-  return () => (
-    <>
-      <Input ref={(r) => { inputEl = r; }} />
-      <button onClick={() => inputEl?.focus()}>聚焦</button>
-    </>
-  );
 });
 ```
 
@@ -454,10 +435,6 @@ defineComponent(({ label }: { label: string }) => {
   return (p) => <div>{p.label}</div>; // ✓ p.label 是最新值
 });
 ```
-
-### 4. 列表渲染忘记 key
-
-Preact 依赖 key 优化列表 diff，任何时候使用 `.map()` 渲染列表都要加 key。
 
 ---
 
