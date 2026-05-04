@@ -20,27 +20,15 @@ function withKey(props: any, key?: string): any {
   return props;
 }
 
-export function jsx(
-  type: any,
-  props: any,
-  key?: string,
-): VNode {
+export function jsx(type: any, props: any, key?: string): VNode {
   return h(type, withKey(props, key));
 }
 
-export function jsxs(
-  type: any,
-  props: any,
-  key?: string,
-): VNode {
+export function jsxs(type: any, props: any, key?: string): VNode {
   return h(type, withKey(props, key));
 }
 
-export function jsxDEV(
-  type: any,
-  props: any,
-  key?: string,
-): VNode {
+export function jsxDEV(type: any, props: any, key?: string): VNode {
   return h(type, withKey(props, key));
 }
 

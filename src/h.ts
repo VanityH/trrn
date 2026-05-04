@@ -28,7 +28,7 @@ export function h(
   ...children: ComponentChildren[]
 ): VNode {
   if (typeof type === "function") {
-    const Adapter = getAdapter(type);
+    const Adapter = getAdapter(type as any);
     return preactH(Adapter as any, props as any, ...children);
   }
   return preactH(type as any, props as any, ...children);
