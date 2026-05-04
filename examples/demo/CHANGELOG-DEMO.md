@@ -37,16 +37,56 @@ examples/demo/src/
 │   │   └── Contact.tsx        — 联系表单（验证 + 提交 + 成功状态）
 │   └── admin/
 │       ├── Dashboard.tsx      — 仪表盘（6 个统计卡片 + 最近订单表）
+│       ├── Analytics.tsx      — ⭐ 实时分析（onMount/onUnmount + action + 闭包时间序列）
+│       ├── DataExplorer.tsx   — ⭐ 数据探索（多条件排序/筛选/分页 + update(newProps)）
 │       ├── Users.tsx          — 用户管理（表格 CRUD + Modal 表单）
 │       ├── Products.tsx       — 产品管理（表格 CRUD + 状态筛选）
 │       ├── Orders.tsx         — 订单管理（卡片列表 + 状态筛选 + 详情 Modal）
+│       ├── KanbanBoard.tsx    — ⭐ 看板（3 层嵌套组件 + 独立闭包 + action）
+│       ├── WizardForm.tsx     — ⭐ 表单向导（4 步骤 + ErrorBoundary + TRRN_MARKER）
 │       └── Settings.tsx       — 设置（个人信息 + 通知偏好 + 主题切换）
+```
+
+## 高级页面（v2 — 展示 trrn 高级 API）
+
+新增 4 个深度使用 trrn 高级能力的复杂页面：
+
+| 页面 | 路径 | 展示的 trrn 高级模式 |
+|------|------|---------------------|
+| **实时分析面板** | /admin/analytics | `onMount`/`onUnmount` 管理定时器生命周期、`action()` 包装刷新按钮、闭包数组维护时间序列、子组件接收 `update(newProps)` |
+| **数据探索** | /admin/data-explorer | 多字段排序/组合筛选/分页/行多选 — 所有状态通过闭包变量管理、`SortHeader` 通过 `update(newProps)` 更新排序指示器、`action()` 包装批量操作、分页组件独立闭包 |
+| **表单向导** | /admin/wizard | 4 步骤表单跨步骤闭包状态持久化（无需全局 store）、`ErrorBoundary` 包裹渲染步骤、显式 `TRRN_MARKER` 标记组件、`action()` 提交、动态条件渲染 |
+| **看板** | /admin/kanban | 3 层嵌套组件（看板→列→卡片）、每列独立闭包（折叠/排序互不影响）、卡片独立闭包（展开状态）、`update(newProps)` 推折叠状态、`action()` 包装 CRUD 操作 |
+
+### 使用的 trrn 高级 API
+
+```
+┌─────────────────────┬──────────────────────────────────────────┐
+│ API                 │ 使用位置                                  │
+├─────────────────────┼──────────────────────────────────────────┤
+│ ctx.update()        │ 所有页面 — 触发重渲染                       │
+│ ctx.update(props)   │ MetricsCard(via JSX props)、SortHeader、   │
+│                     │ KanbanColumn — 父组件推送数据                │
+│ ctx.onMount(fn)     │ Analytics — 启动实时数据定时器                │
+│ ctx.onUnmount(fn)   │ Analytics — 离开页面清理定时器                │
+│ action(ctx, fn)     │ Analytics(刷新)、DataExplorer(批量删除)、    │
+│                     │ WizardForm(提交)、Kanban(保存编辑)            │
+│ ErrorBoundary       │ WizardForm — 包裹每个步骤捕获渲染错误          │
+│ TRRN_MARKER         │ StepContainer — 显式标记组件类型              │
+│ createContext       │ AuthContext — 认证上下文（预留）               │
+│ ctx.consume()       │ AuthContext — 读取上下文值（预留）             │
+│ RenderFn(props)     │ MetricsCard、SortHeader、KanbanColumn —      │
+│                     │ render 函数参数接收 update 推送               │
+│ 闭包 as state       │ 所有页面 — 替代 useState 的所有场景              │
+│ 闭包数组            │ Analytics — 60 点时间序列历史数据               │
+│ 嵌套组件组合         │ Kanban(3层)、Wizard(4步容器+表单)              │
+└─────────────────────┴──────────────────────────────────────────┘
 ```
 
 ## 新建/修改文件统计
 
-- 新建 20 个文件
-- 保留并修改 4 个文件（app.tsx, main.tsx, index.html, style.css）
+- 新建 24 个文件
+- 保留并修改 5 个文件（app.tsx, main.tsx, index.html, style.css, AdminLayout.tsx）
 - 保留原有 demo 组件（Counter, Pager, Nav, Spinner, TodoItem）
 
 ---

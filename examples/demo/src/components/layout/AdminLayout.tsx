@@ -10,9 +10,13 @@ interface SidebarItem {
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { path: "/admin", label: "仪表盘", icon: "📊" },
+  { path: "/admin/analytics", label: "实时分析", icon: "📈" },
+  { path: "/admin/data-explorer", label: "数据探索", icon: "🔍" },
   { path: "/admin/users", label: "用户管理", icon: "👥" },
   { path: "/admin/products", label: "产品管理", icon: "📦" },
   { path: "/admin/orders", label: "订单管理", icon: "📋" },
+  { path: "/admin/kanban", label: "看板", icon: "📋" },
+  { path: "/admin/wizard", label: "表单向导", icon: "📝" },
   { path: "/admin/settings", label: "设置", icon: "⚙️" },
 ];
 

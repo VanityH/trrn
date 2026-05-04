@@ -11,6 +11,10 @@ import { ContactPage } from "./pages/site/Contact.tsx";
 
 // Admin pages
 import { DashboardPage } from "./pages/admin/Dashboard.tsx";
+import { AnalyticsPage } from "./pages/admin/Analytics.tsx";
+import { DataExplorerPage } from "./pages/admin/DataExplorer.tsx";
+import { KanbanBoardPage } from "./pages/admin/KanbanBoard.tsx";
+import { WizardFormPage } from "./pages/admin/WizardForm.tsx";
 import { UsersPage } from "./pages/admin/Users.tsx";
 import { ProductsPage } from "./pages/admin/Products.tsx";
 import { OrdersPage } from "./pages/admin/Orders.tsx";
@@ -33,9 +37,13 @@ const siteRoutes: Route[] = [
 
 const adminRoutes: { path: string; Page: (props?: any, ctx?: any) => RenderFn; title: string }[] = [
   { path: "/admin", Page: DashboardPage, title: "仪表盘" },
+  { path: "/admin/analytics", Page: AnalyticsPage, title: "实时分析" },
+  { path: "/admin/data-explorer", Page: DataExplorerPage, title: "数据探索" },
   { path: "/admin/users", Page: UsersPage, title: "用户管理" },
   { path: "/admin/products", Page: ProductsPage, title: "产品管理" },
   { path: "/admin/orders", Page: OrdersPage, title: "订单管理" },
+  { path: "/admin/kanban", Page: KanbanBoardPage, title: "看板" },
+  { path: "/admin/wizard", Page: WizardFormPage, title: "表单向导" },
   { path: "/admin/settings", Page: SettingsPage, title: "设置" },
 ];
 
