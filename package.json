@@ -1,18 +1,26 @@
 {
   "name": "trrn",
   "version": "0.0.0",
-  "description": "Closure-based frontend framework on Preact. No useState, no hooks — just functions and closures.",
+  "description": "Closure-based Preact component wrapper. No useState, no hooks — just functions and closures.",
   "keywords": [
-    "closure",
-    "components",
-    "framework",
-    "functional",
-    "hyperscript",
     "preact",
-    "ui"
+    "components",
+    "closure",
+    "functional",
+    "ui",
+    "hooks-free",
+    "state management"
   ],
+  "homepage": "https://github.com/VanityH/trrn#readme",
+  "bugs": {
+    "url": "https://github.com/VanityH/trrn/issues"
+  },
   "license": "MIT",
-  "author": "",
+  "author": "Himavanta@foxmail.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VanityH/trrn.git"
+  },
   "files": [
     "dist"
   ],
