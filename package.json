@@ -1,15 +1,15 @@
 {
   "name": "trrn",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Closure-based Preact component wrapper. No useState, no hooks — just functions and closures.",
   "keywords": [
-    "preact",
-    "components",
     "closure",
+    "components",
     "functional",
-    "ui",
     "hooks-free",
-    "state management"
+    "preact",
+    "state management",
+    "ui"
   ],
   "homepage": "https://github.com/VanityH/trrn#readme",
   "bugs": {
