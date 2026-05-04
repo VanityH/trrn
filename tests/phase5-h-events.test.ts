@@ -1,16 +1,15 @@
 /**
- * Phase 5: 封装 h 函数与事件处理探索
+ * Phase 5: 事件处理 + action() 辅助函数
  *
  * 验证点：
- * 1. 事件处理正确（onClick, onInput, onSubmit 等）
- * 2. 事件对象行为正常
- * 3. 探索 action() 辅助函数减少 ctx.update() 样板代码
- * 4. ref 访问 DOM 元素
+ * 1. onClick, onInput, onSubmit 事件
+ * 2. action() 自动调用 ctx.update()
+ * 3. DOM ref 访问
  */
 
 import { expect, test } from "vite-plus/test";
-import { render, h } from "../src/index.ts";
-import type { Component, Ctx } from "../src/index.ts";
+import { render, h } from "preact";
+import { defineComponent, action } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
@@ -20,25 +19,12 @@ function makeContainer(): HTMLElement {
   return el;
 }
 
-// ─── Helper: action ───────────────────────────────────────────
-
-/**
- * 包装事件处理器，执行后自动调用 ctx.update()。
- * 这是一个探索性的 API，减少样板代码。
- */
-function action<P extends unknown[]>(ctx: Ctx, fn: (...args: P) => void): (...args: P) => void {
-  return (...args: P) => {
-    fn(...args);
-    ctx.update();
-  };
-}
-
 // ─── Test 1: onClick 事件 ─────────────────────────────────────
 
 test("onClick 事件正常工作", async () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     let clicked = false;
     return (_p) =>
       h(
@@ -51,9 +37,9 @@ test("onClick 事件正常工作", async () => {
         },
         clicked ? "clicked" : "click me",
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   expect(container.textContent).toBe("click me");
 
   container.querySelector("button")!.click();
@@ -68,7 +54,7 @@ test("onClick 事件正常工作", async () => {
 test("onInput 事件：受控输入模式", async () => {
   const container = makeContainer();
 
-  const InputComp: Component = (_props, ctx) => {
+  const InputComp = defineComponent((_props, ctx) => {
     let value = "";
     return (_p) =>
       h("input", {
@@ -78,9 +64,9 @@ test("onInput 事件：受控输入模式", async () => {
           ctx.update();
         },
       });
-  };
+  });
 
-  render(InputComp, container);
+  render(h(InputComp, null), container);
   const input = container.querySelector("input")!;
   expect(input.value).toBe("");
 
@@ -98,7 +84,7 @@ test("onInput 事件：受控输入模式", async () => {
 test("onSubmit 事件：表单提交处理", async () => {
   const container = makeContainer();
 
-  const FormComp: Component = (_props, ctx) => {
+  const FormComp = defineComponent((_props, ctx) => {
     let submitted = false;
     let value = "";
 
@@ -111,9 +97,7 @@ test("onSubmit 事件：表单提交处理", async () => {
     return (_p) =>
       h(
         "form",
-        {
-          onSubmit: handleSubmit,
-        },
+        { onSubmit: handleSubmit },
         submitted
           ? h("span", null, "submitted")
           : h("input", {
@@ -123,9 +107,9 @@ test("onSubmit 事件：表单提交处理", async () => {
               },
             }),
       );
-  };
+  });
 
-  render(FormComp, container);
+  render(h(FormComp, null), container);
 
   expect(container.querySelector("form")).toBeTruthy();
   expect(container.querySelector("span")).toBeNull();
@@ -145,7 +129,7 @@ test("onSubmit 事件：表单提交处理", async () => {
 test("action() 包装事件处理器，执行后自动更新", async () => {
   const container = makeContainer();
 
-  const Counter: Component = (_props, ctx) => {
+  const Counter = defineComponent((_props, ctx) => {
     let count = 0;
     return (_p) =>
       h(
@@ -157,9 +141,9 @@ test("action() 包装事件处理器，执行后自动更新", async () => {
         },
         String(count),
       );
-  };
+  });
 
-  render(Counter, container);
+  render(h(Counter, null), container);
   expect(container.textContent).toBe("0");
 
   container.querySelector("button")!.click();
@@ -178,7 +162,7 @@ test("action() 包装事件处理器，执行后自动更新", async () => {
 test("action() 在一次事件中修改多个变量然后统一更新", async () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     let a = 0;
     let b = 0;
     return (_p) =>
@@ -186,20 +170,11 @@ test("action() 在一次事件中修改多个变量然后统一更新", async ()
         "div",
         null,
         h("span", { class: "sum" }, String(a + b)),
-        h(
-          "button",
-          {
-            onClick: action(ctx, () => {
-              a++;
-              b += 2;
-            }),
-          },
-          "inc",
-        ),
+        h("button", { onClick: action(ctx, () => { a++; b += 2; }) }, "inc"),
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
 
   expect(container.querySelector(".sum")?.textContent).toBe("0");
 
@@ -224,11 +199,11 @@ test("通过回调 ref 访问 DOM 元素", () => {
     elRef = el;
   };
 
-  const Comp: Component = (_props, _ctx) => {
+  const Comp = defineComponent((_props, _ctx) => {
     return (_p) => h("div", { ref: setRef as any }, "ref-test");
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
 
   expect(elRef).toBeTruthy();
   const el = elRef!;

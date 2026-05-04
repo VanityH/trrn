@@ -12,7 +12,10 @@ export function action<P extends unknown[]>(
   fn: (...args: P) => void,
 ): (...args: P) => void {
   return (...args: P) => {
-    fn(...args);
-    ctx.update();
+    try {
+      fn(...args);
+    } finally {
+      ctx.update();
+    }
   };
 }

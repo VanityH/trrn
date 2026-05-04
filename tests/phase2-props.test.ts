@@ -9,8 +9,8 @@
  */
 
 import { expect, test } from "vite-plus/test";
-import { render, h } from "../src/index.ts";
-import type { Component } from "../src/index.ts";
+import { render, h } from "preact";
+import { defineComponent } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
@@ -26,12 +26,12 @@ test("初始 props 传给外层函数", () => {
   const container = makeContainer();
   let outerProps: any;
 
-  const Comp: Component<{ name: string }> = (props, _ctx) => {
+  const Comp = defineComponent((props, _ctx) => {
     outerProps = props;
     return (_props) => h("div", null, (_props?.name as string) ?? "none");
-  };
+  });
 
-  render(Comp, container, { name: "trrn" });
+  render(h(Comp, { name: "trrn" }), container);
 
   expect(outerProps).toEqual({ name: "trrn" });
   expect(container.textContent).toBe("trrn");
@@ -46,15 +46,15 @@ test("无初始 props 时 outer 和 render 均收到空对象", () => {
   let outerProps: any;
   let renderProps: any;
 
-  const Comp: Component = (props, _ctx) => {
+  const Comp = defineComponent((props, _ctx) => {
     outerProps = props;
     return (p) => {
       renderProps = p;
       return h("div", null, "ok");
     };
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
 
   // Preact 标准化 props 为空对象，解构带默认值的行为一致
   expect(outerProps).toEqual({});
@@ -70,7 +70,7 @@ test("ctx.update(newProps) 传递新 props 给 render 函数", async () => {
   const container = makeContainer();
   const renderPropsLog: any[] = [];
 
-  const Comp: Component<{ name: string }> = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     return (p) => {
       renderPropsLog.push(p);
       return h(
@@ -81,9 +81,9 @@ test("ctx.update(newProps) 传递新 props 给 render 函数", async () => {
         (p?.name as string) ?? "no-name",
       );
     };
-  };
+  });
 
-  render(Comp, container, { name: "initial" });
+  render(h(Comp, { name: "initial" }), container);
 
   expect(container.textContent).toBe("initial");
   expect(renderPropsLog).toEqual([{ name: "initial" }]);
@@ -103,7 +103,7 @@ test("ctx.update() 无参数时 props 保持上次的值", async () => {
   const container = makeContainer();
   const renderPropsLog: any[] = [];
 
-  const Comp: Component<{ label: string }> = (props, ctx) => {
+  const Comp = defineComponent((props, ctx) => {
     let counter = 0;
     return (p) => {
       renderPropsLog.push({ ...p, counter });
@@ -118,9 +118,9 @@ test("ctx.update() 无参数时 props 保持上次的值", async () => {
         `${p?.label ?? "?"}:${counter}`,
       );
     };
-  };
+  });
 
-  render(Comp, container, { label: "count" });
+  render(h(Comp, { label: "count" }), container);
 
   expect(container.textContent).toBe("count:0");
 
@@ -138,12 +138,12 @@ test("ctx.update() 无参数时 props 保持上次的值", async () => {
 test("外层解构 props 带默认值", () => {
   const container = makeContainer();
 
-  const Comp: Component<{ title?: string; count?: number }> = (p, _ctx) => {
+  const Comp = defineComponent((p, _ctx) => {
     const { title = "Hello", count = 0 } = p ?? {};
     return (_p) => h("div", null, `${title}:${count}`);
-  };
+  });
 
-  render(Comp, container, { title: "Hi" });
+  render(h(Comp, { title: "Hi" }), container);
 
   // count 使用默认值 0
   expect(container.textContent).toBe("Hi:0");

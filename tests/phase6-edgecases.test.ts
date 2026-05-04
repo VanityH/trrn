@@ -6,13 +6,13 @@
  * 2. 条件渲染（null → element → null）
  * 3. Fragment / 数组子元素
  * 4. 列表渲染 + key
- * 5. 组件替换触发 onUnmount（用 fake timers 控制异步）
+ * 5. 组件替换触发 onUnmount
  * 6. 子组件条件渲染触发 onUnmount
  */
 
 import { expect, test } from "vite-plus/test";
-import { render, h } from "../src/index.ts";
-import type { Component } from "../src/index.ts";
+import { render, h } from "preact";
+import { defineComponent } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
@@ -27,7 +27,7 @@ function makeContainer(): HTMLElement {
 test("卸载后 ctx.update() 不抛出异常", async () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     let count = 0;
     return (_p) =>
       h(
@@ -40,9 +40,9 @@ test("卸载后 ctx.update() 不抛出异常", async () => {
         },
         String(count),
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   const btn = container.querySelector("button")!;
 
   btn.click();
@@ -54,8 +54,6 @@ test("卸载后 ctx.update() 不抛出异常", async () => {
 
   // 尝试在卸载后触发更新（不应崩溃）
   expect(() => btn.click()).not.toThrow();
-
-  container.remove();
 });
 
 // ─── Test 2: 条件渲染 ────────────────────────────────────────
@@ -63,27 +61,18 @@ test("卸载后 ctx.update() 不抛出异常", async () => {
 test("条件渲染：null / VNode 之间切换", async () => {
   const container = makeContainer();
 
-  const Toggle: Component = (_props, ctx) => {
+  const Toggle = defineComponent((_props, ctx) => {
     let visible = true;
     return (_p) =>
       h(
         "div",
         null,
         visible ? h("span", { class: "content" }, "visible") : null,
-        h(
-          "button",
-          {
-            onClick: () => {
-              visible = !visible;
-              ctx.update();
-            },
-          },
-          "toggle",
-        ),
+        h("button", { onClick: () => { visible = !visible; ctx.update(); } }, "toggle"),
       );
-  };
+  });
 
-  render(Toggle, container);
+  render(h(Toggle, null), container);
 
   expect(container.querySelector(".content")).toBeTruthy();
 
@@ -103,7 +92,7 @@ test("条件渲染：null / VNode 之间切换", async () => {
 test("render 返回数组子元素", () => {
   const container = makeContainer();
 
-  const List: Component = (_props, _ctx) => {
+  const List = defineComponent((_props, _ctx) => {
     const items = ["a", "b", "c"];
     return (_p) =>
       h(
@@ -111,9 +100,9 @@ test("render 返回数组子元素", () => {
         null,
         items.map((item, i) => h("li", { key: i }, item)),
       );
-  };
+  });
 
-  render(List, container);
+  render(h(List, null), container);
 
   const lis = container.querySelectorAll("li");
   expect(lis.length).toBe(3);
@@ -128,7 +117,7 @@ test("render 返回数组子元素", () => {
 test("动态列表使用 key 保证元素复用", async () => {
   const container = makeContainer();
 
-  const DynamicList: Component = (_props, ctx) => {
+  const DynamicList = defineComponent((_props, ctx) => {
     let items = [
       { id: 1, text: "first" },
       { id: 2, text: "second" },
@@ -142,23 +131,17 @@ test("动态列表使用 key 保证元素复用", async () => {
           null,
           items.map((item) => h("li", { key: item.id }, item.text)),
         ),
-        h(
-          "button",
-          {
-            onClick: () => {
-              items = [
-                { id: 2, text: "second" },
-                { id: 3, text: "third" },
-              ];
-              ctx.update();
-            },
-          },
-          "shuffle",
-        ),
+        h("button", { onClick: () => {
+          items = [
+            { id: 2, text: "second" },
+            { id: 3, text: "third" },
+          ];
+          ctx.update();
+        } }, "shuffle"),
       );
-  };
+  });
 
-  render(DynamicList, container);
+  render(h(DynamicList, null), container);
 
   let lis = container.querySelectorAll("li");
   expect(lis.length).toBe(2);
@@ -180,51 +163,41 @@ test("动态列表使用 key 保证元素复用", async () => {
 test("ctx.onUnmount() 注册清理回调接口可用", () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     ctx.onUnmount(() => {
       // cleanup logic
     });
     return () => h("div", null, "hello");
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
 
-  // onUnmount 基于 useEffect cleanup，由 Preact 保证调用时机
   expect(true).toBe(true);
 
   container.remove();
 });
 
-// ─── Test 6: 条件渲染 + 回调模式（替代 onUnmount 验证） ──────
+// ─── Test 6: 条件渲染 + 回调模式 ─────────────────────────────
 
 test("子组件被条件移除后不再渲染", async () => {
   const container = makeContainer();
 
-  const Child: Component = (_props, _ctx) => {
+  const Child = defineComponent((_props, _ctx) => {
     return () => h("span", null, "child");
-  };
+  });
 
-  const Parent: Component = (_props, ctx) => {
+  const Parent = defineComponent((_props, ctx) => {
     let show = true;
     return (_p) =>
       h(
         "div",
         null,
         show ? h(Child, null) : null,
-        h(
-          "button",
-          {
-            onClick: () => {
-              show = !show;
-              ctx.update();
-            },
-          },
-          "toggle",
-        ),
+        h("button", { onClick: () => { show = !show; ctx.update(); } }, "toggle"),
       );
-  };
+  });
 
-  render(Parent, container);
+  render(h(Parent, null), container);
   expect(container.querySelector("span")).toBeTruthy();
 
   container.querySelector("button")!.click();
@@ -244,19 +217,19 @@ test("子组件被条件移除后不再渲染", async () => {
 test("render 返回字符串/数字", () => {
   const container = makeContainer();
 
-  const StringComp: Component = (_props, _ctx) => {
+  const StringComp = defineComponent((_props, _ctx) => {
     return () => "plain-text" as any;
-  };
+  });
 
-  render(StringComp, container);
+  render(h(StringComp, null), container);
   expect(container.textContent).toBe("plain-text");
   container.remove();
 
   const c2 = makeContainer();
-  const NumComp: Component = (_props, _ctx) => {
+  const NumComp = defineComponent((_props, _ctx) => {
     return () => 42 as any;
-  };
-  render(NumComp, c2);
+  });
+  render(h(NumComp, null), c2);
   expect(c2.textContent).toBe("42");
   c2.remove();
 });

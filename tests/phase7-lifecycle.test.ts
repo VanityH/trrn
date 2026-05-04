@@ -3,9 +3,8 @@
  * 注：Preact useEffect 通过 RAF + setTimeout(35ms) 调度，测试需等待 >50ms
  */
 import { expect, test, vi } from "vite-plus/test";
-import { render as preactRender, h as preactH } from "preact";
-import { render, h, action } from "../src/index.ts";
-import type { Component } from "../src/index.ts";
+import { render, h } from "preact";
+import { defineComponent, action } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 const waitEffects = () => new Promise<void>((r) => setTimeout(r, 60));
@@ -21,7 +20,7 @@ function makeContainer(): HTMLElement {
 test("action(ctx, fn) 执行后自动调用 ctx.update()", async () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     let count = 0;
     return (_p) =>
       h(
@@ -33,9 +32,9 @@ test("action(ctx, fn) 执行后自动调用 ctx.update()", async () => {
         },
         String(count),
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   expect(container.textContent).toBe("0");
 
   container.querySelector("button")!.click();
@@ -48,7 +47,7 @@ test("action(ctx, fn) 转发事件参数", async () => {
   const container = makeContainer();
   let captured: any;
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     return (_p) =>
       h(
         "button",
@@ -59,9 +58,9 @@ test("action(ctx, fn) 转发事件参数", async () => {
         },
         "click",
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   container.querySelector("button")!.click();
   await tick();
   expect(captured).toBe("click");
@@ -71,7 +70,7 @@ test("action(ctx, fn) 转发事件参数", async () => {
 test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
   const container = makeContainer();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     let a = 0;
     let b = 0;
     return (_p) =>
@@ -79,20 +78,11 @@ test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
         "div",
         null,
         h("span", null, String(a + b)),
-        h(
-          "button",
-          {
-            onClick: action(ctx, () => {
-              a++;
-              b += 2;
-            }),
-          },
-          "inc",
-        ),
+        h("button", { onClick: action(ctx, () => { a++; b += 2; }) }, "inc"),
       );
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   expect(container.querySelector("span")?.textContent).toBe("0");
 
   container.querySelector("button")!.click();
@@ -107,12 +97,12 @@ test("ctx.onMount() 在首帧渲染后调用", async () => {
   const container = makeContainer();
   const onMountSpy = vi.fn();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     ctx.onMount(onMountSpy);
     return () => h("div", null, "mounted");
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   expect(container.textContent).toBe("mounted");
 
   await waitEffects();
@@ -124,15 +114,15 @@ test("ctx.onMount() 可以访问 DOM", async () => {
   const container = makeContainer();
   let domText = "";
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     ctx.onMount(() => {
       const el = document.querySelector("[data-mounted]");
       if (el) domText = el.textContent ?? "";
     });
     return () => h("div", { "data-mounted": "" }, "hello-dom");
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   await waitEffects();
   expect(domText).toBe("hello-dom");
   container.remove();
@@ -141,14 +131,14 @@ test("ctx.onMount() 可以访问 DOM", async () => {
 test("多个 ctx.onMount() 回调依次执行", async () => {
   const calls: string[] = [];
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     ctx.onMount(() => calls.push("a"));
     ctx.onMount(() => calls.push("b"));
     return () => h("div", null, "ok");
-  };
+  });
 
   const c = makeContainer();
-  render(Comp, c);
+  render(h(Comp, null), c);
   await waitEffects();
   expect(calls).toEqual(["a", "b"]);
   c.remove();
@@ -160,19 +150,19 @@ test("ctx.onUnmount() 在组件替换时触发", async () => {
   const container = makeContainer();
   const cleanupFn = vi.fn();
 
-  const Comp: Component = (_props, ctx) => {
+  const Comp = defineComponent((_props, ctx) => {
     ctx.onUnmount(cleanupFn);
     return () => h("div", null, "hello");
-  };
+  });
 
-  render(Comp, container);
+  render(h(Comp, null), container);
   await waitEffects();
   expect(cleanupFn).not.toHaveBeenCalled();
 
   function Other() {
-    return preactH("div", null, "other");
+    return h("div", null, "other");
   }
-  preactRender(preactH(Other, null), container);
+  render(h(Other, null), container);
   await waitEffects();
 
   expect(cleanupFn).toHaveBeenCalledTimes(1);

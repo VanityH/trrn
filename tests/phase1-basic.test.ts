@@ -9,8 +9,8 @@
  */
 
 import { expect, test, vi } from "vite-plus/test";
-import { render, h } from "../src/index.ts";
-import type { Component } from "../src/index.ts";
+import { render, h } from "preact";
+import { defineComponent } from "../src/index.ts";
 
 // Preact 状态更新通过 queueMicrotask，测试中需要 flush
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
@@ -28,7 +28,7 @@ test("基础挂载：外层执行一次，render 执行首次渲染", () => {
   const outerSpy = vi.fn();
   const renderSpy = vi.fn();
 
-  const Counter: Component = (_props, _ctx) => {
+  const Counter = defineComponent((_props, _ctx) => {
     outerSpy();
     let count = 0;
 
@@ -36,9 +36,9 @@ test("基础挂载：外层执行一次，render 执行首次渲染", () => {
       renderSpy();
       return h("div", null, String(count));
     };
-  };
+  });
 
-  render(Counter, container);
+  render(h(Counter, null), container);
 
   expect(outerSpy).toHaveBeenCalledTimes(1);
   expect(renderSpy).toHaveBeenCalledTimes(1);
@@ -54,7 +54,7 @@ test("ctx.update() 触发重渲染，闭包状态保持", async () => {
   const outerSpy = vi.fn();
   const renderCalls: number[] = [];
 
-  const Counter: Component = (_props, ctx) => {
+  const Counter = defineComponent((_props, ctx) => {
     outerSpy();
     let count = 0;
 
@@ -71,9 +71,9 @@ test("ctx.update() 触发重渲染，闭包状态保持", async () => {
         String(count),
       );
     };
-  };
+  });
 
-  render(Counter, container);
+  render(h(Counter, null), container);
 
   expect(outerSpy).toHaveBeenCalledTimes(1);
   expect(container.textContent).toBe("0");
@@ -91,7 +91,6 @@ test("ctx.update() 触发重渲染，闭包状态保持", async () => {
   expect(outerSpy).toHaveBeenCalledTimes(1);
 
   // render 函数被调用了 3 次（首次 + 2 次更新）
-  // count++ 在 ctx.update() 之前，render 看到的是已更新的值
   expect(renderCalls).toEqual([0, 1, 2]);
 
   container.remove();
@@ -102,7 +101,7 @@ test("ctx.update() 触发重渲染，闭包状态保持", async () => {
 test("连续多次 ctx.update()，最终状态正确", async () => {
   const container = makeContainer();
 
-  const Counter: Component = (_props, ctx) => {
+  const Counter = defineComponent((_props, ctx) => {
     let count = 0;
     return (_props) => {
       return h(
@@ -118,9 +117,9 @@ test("连续多次 ctx.update()，最终状态正确", async () => {
         String(count),
       );
     };
-  };
+  });
 
-  render(Counter, container);
+  render(h(Counter, null), container);
   expect(container.textContent).toBe("0");
 
   container.querySelector("button")!.click();
@@ -137,7 +136,7 @@ test("多个组件实例的状态彼此独立", async () => {
   const c1 = makeContainer();
   const c2 = makeContainer();
 
-  const Counter: Component = (_props, ctx) => {
+  const Counter = defineComponent((_props, ctx) => {
     let count = 0;
     return (_props) => {
       return h(
@@ -151,10 +150,10 @@ test("多个组件实例的状态彼此独立", async () => {
         String(count),
       );
     };
-  };
+  });
 
-  render(Counter, c1);
-  render(Counter, c2);
+  render(h(Counter, null), c1);
+  render(h(Counter, null), c2);
 
   expect(c1.textContent).toBe("0");
   expect(c2.textContent).toBe("0");

@@ -1,6 +1,5 @@
 import { Component } from "preact";
 import type { ComponentChildren } from "preact";
-import { TRRN_MARKER } from "./types.ts";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -22,8 +21,6 @@ export interface ErrorBoundaryProps {
  *   )
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, { error: Error | null }> {
-  // 显式标记为非 trrn 组件，防止适配器包装（会破坏错误捕获）
-  static [TRRN_MARKER] = false;
   state = { error: null as Error | null };
 
   componentDidCatch(error: Error): void {
