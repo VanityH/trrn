@@ -86,7 +86,7 @@ npm install trrn preact
 ```tsx
 import { render } from "trrn";
 
-function Hello(_props, { onMount }) {
+function Hello(_props, { onMount, update }) {
   let name = "";
 
   onMount(() => console.log("DOM 就绪"));
@@ -97,7 +97,7 @@ function Hello(_props, { onMount }) {
         value={name}
         onInput={(e) => {
           name = (e.target as HTMLInputElement).value;
-          ctx.update();
+          update();
         }}
       />
       <p>Hello, {name || "world"}</p>
@@ -166,25 +166,28 @@ function Comp(_props, { update }) {
 ### 基本结构
 
 ```tsx
-function MyComponent(props: MyProps, ctx: Ctx): RenderFn {
+function MyComponent(
+  { initial }: { initial?: number },
+  { onMount, onUnmount, update }: Ctx,
+): RenderFn {
   // ═══ 外层：只执行一次 ═══
   // - 闭包变量 = 状态
   // - 异步请求、定时器
   // - 注册生命周期
+  // - 外层 props 解构 = 初始值
 
-  let items = props?.initial ?? [];
+  let count = initial ?? 0;
 
-  ctx.onMount(() => {
+  onMount(() => {
     /* DOM 就绪 */
   });
-  ctx.onUnmount(() => {
+  onUnmount(() => {
     /* 清理 */
   });
 
   // ═══ render 函数：每次渲染执行 ═══
-  return (latestProps) => {
-    // latestProps 始终是当前最新的 props
-    // 可直接从这里解构获取更新后的值
+  // render 函数参数解构 = 每次渲染的最新值
+  return () => {
     return <div>{/* ... */}</div>;
   };
 }
@@ -194,25 +197,51 @@ function MyComponent(props: MyProps, ctx: Ctx): RenderFn {
 
 这是一个容易混淆的关键点：
 
-|          | 外层 `props`           | render 函数 `latestProps`                    |
+|          | 外层 `props`           | render 函数 `props`                          |
 | -------- | ---------------------- | -------------------------------------------- |
 | 执行次数 | **1 次**（组件挂载时） | **每次渲染**                                 |
 | 更新方式 | 永远不变               | 父组件重渲染或 `ctx.update(newProps)` 后更新 |
 | 推荐用法 | 初始解构、默认值       | 读取渲染时最新数据                           |
 
 ```tsx
-function Card(props, ctx) {
+function Card(_props, { update }: Ctx) {
   // 外层 props：只拿初始值，适合设置默认值
-  const defaultTitle = props?.title ?? "Untitled";
+  const defaultTitle = _props?.title ?? "Untitled";
 
   return (latest) => {
     // render 函数的 props：每次渲染最新值
-    // ✗ const title = props.title;  // 永远是最初的值！
-    // ✓ const { title } = latest as any;  // 最新值
+    // ✗ _props.title    ← 永远是最初的值！
+    // ✓ (latest as any).title  ← 最新值
     return <div>{/* ... */}</div>;
   };
 }
 ```
+
+### 同名解构模式
+
+利用 JavaScript 的作用域规则，外层和 render 函数可以用**同名变量**解构 props —— 它们处在不同的函数作用域中，各自取到正确的值：
+
+```tsx
+function Card({ title, count }: Props, { update }: Ctx) {
+  // 外层作用域：title, count = 初始值（只执行一次）
+  let inner = count;
+
+  return ({ title, count }: Props) => {
+    // render 函数作用域：title, count = 每次渲染的最新值
+    // 这里的 title/count 会遮蔽外层的同名变量
+    // JS 作用域规则确保：外层 ↑ 拿初始值，内层 ↑ 拿最新值，互不干扰
+    return (
+      <div>
+        <h2>{title}</h2>
+        <p>外层 count: {inner}</p> {/* 永远是最初的值 */}
+        <p>render count: {count}</p> {/* 每次渲染的最新值 */}
+      </div>
+    );
+  };
+}
+```
+
+**外层解构用于初始读取，render 函数解构用于渲染时读取最新值。** 两者同名但值不同——这是 trrn 两层组件模式的自然结果，也是 JS 函数作用域的正常行为。
 
 ### 闭包变量
 
@@ -361,12 +390,10 @@ function Parent(_props, { update }) {
   );
 }
 
-// 子组件通过 render 函数的参数接收最新 props
+// 子组件通过 render 函数的参数解构接收最新 props
 function Child(_props, _ctx) {
-  return (latestProps) => {
-    // latestProps = propsRef.current
-    // 父组件重渲染 → adapter 更新 propsRef → renderFn(propsRef.current)
-    const { label } = latestProps as any;
+  return ({ label }: any) => {
+    // 每次父组件重渲染，label 都是最新值
     return <span>{label}</span>;
   };
 }
@@ -643,25 +670,9 @@ let count = 0;
 
 **任何需要反映在 UI 上的闭包变量变更，后面必须跟 `ctx.update()`。**
 
-### 2. 外层解构 props 导致值不更新
+### 2. 混淆外层初始值和 render 最新值
 
-```tsx
-function Comp(props, _ctx) {
-  const { name } = props ?? {}; // ✗ 只取初始值，后续更新失效
-  return () => <div>{name}</div>; // name 始终是初始值
-}
-```
-
-外层解构只取到初始 props。需要最新值应:
-
-```tsx
-function Comp(_props, _ctx) {
-  return (latestProps) => {
-    const { name } = latestProps as any; // ✓ 每次渲染取最新值
-    return <div>{name}</div>;
-  };
-}
-```
+参见[外层 vs 内层的 props](#外层-vs-内层的-props)和[同名解构模式](#同名解构模式)。
 
 ### 3. 在 render 函数中调用 ctx.update()
 
