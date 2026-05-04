@@ -1,6 +1,6 @@
 # trrn
 
-基于 [Preact](https://preactjs.com/) 的闭包状态组件框架。无 `useState`、无 hooks——只有函数和闭包。
+**Preact 闭包组件包装器** — 用闭包变量替代 hooks。实验性项目。
 
 ```tsx
 import { defineComponent } from "trrn";
@@ -24,23 +24,25 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 });
 ```
 
+> trrn 是一个实验性探索，代码和文档由 AI 辅助生成。它不对应某个生产框架，只是对"闭包驱动 UI"这个思路的尝试。不适合生产使用。
+
 ---
 
 ## 目录
 
-- [核心理念](#核心理念)
+- [概念](#概念)
 - [安装](#安装)
 - [组件模式](#组件模式)
 - [更新机制](#更新机制)
-- [Props 与数据流](#props-与数据流)
 - [生命周期](#生命周期)
+- [Render 函数中的 Preact hooks](#render-函数中的-preact-hooks)
 - [与 Preact 互操作](#与-preact-互操作)
 - [API 参考](#api-参考)
 - [常见陷阱](#常见陷阱)
 
 ---
 
-## 核心理念
+## 概念
 
 **闭包就是状态。**
 
@@ -56,6 +58,7 @@ defineComponent((props, ctx) => {
     // ┌─ render 函数 ──────────────────────┐
     // │ 每次渲染执行                        │
     // │ props 始终是最新值                  │
+    // │ 可使用 Preact hooks                 │
     // │ 返回 VNode                          │
     // └─────────────────────────────────────┘
   };
@@ -65,6 +68,8 @@ defineComponent((props, ctx) => {
 - 外层闭包变量就是组件的"状态"——无需 `useState`
 - 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`、无隐式依赖追踪
 - `defineComponent` 返回**标准 Preact 组件**——与 Preact 生态 100% 互操作
+
+trrn 本身不做渲染、不做路由、不做状态管理——这些全部交给 Preact。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
 
 ---
 
@@ -251,43 +256,6 @@ defineComponent(({ page = 1 }) => {
 
 ---
 
-## Props 与数据流
-
-### 父传子
-
-父组件 `update()` → Preact 重渲染 → 新 JSX props 传入子组件：
-
-```
-父组件调用 update()
-  └─ Preact 重渲染父组件，生成新 VNode
-      └─ <Child label={value} /> 传入新 props
-          └─ Child 的 render 函数参数 label = 最新值
-```
-
-### render 函数的参数 = 最新 props
-
-render 函数每次渲染执行，其 props 参数始终是**最新值**：
-
-```tsx
-defineComponent(({ title }: { title: string }) => {
-  // 外层 title = 初始值（只执行一次）
-  return (p) => {
-    // p.title = 最新值（每次渲染）
-    return <div>{p.title}</div>;
-  };
-});
-```
-
-### internalRef 机制
-
-`defineComponent` 内部通过 `internalRef` 区分"父组件重渲染"和"自身 update"：
-
-- 父组件重渲染 → `internalRef = false` → propsRef 被新 props 覆盖
-- `ctx.update()` 触发 → `internalRef = true` → propsRef 保持不变
-- `ctx.update(newProps)` → newProps 合并到 propsRef
-
----
-
 ## 生命周期
 
 ### onMount
@@ -332,14 +300,50 @@ const Comp = defineComponent((_, { onMount, onUnmount }) => {
 
 ---
 
+## Render 函数中的 Preact hooks
+
+trrn 组件是标准 Preact 组件，render 函数在渲染时执行，因此其中可以调用所有 Preact hooks。
+
+```tsx
+const Comp = defineComponent(() => {
+  return () => {
+    const theme = useContext(ThemeCtx);   // Context
+    const items = useMemo(() => heavy(), [deps]); // 性能优化
+    return <div>{theme}</div>;
+  };
+});
+```
+
+Ref 只是普通 prop，无需 `forwardRef`：
+
+```tsx
+const Input = defineComponent(() => {
+  let el: HTMLInputElement | null = null;
+  return (p) => <input ref={(r) => { el = r; }} />;
+});
+
+const Form = defineComponent(() => {
+  let inputEl: HTMLInputElement | null = null;
+  return () => (
+    <>
+      <Input ref={(r) => { inputEl = r; }} />
+      <button onClick={() => inputEl?.focus()}>聚焦</button>
+    </>
+  );
+});
+```
+
+> hooks 只能在 render 函数中调用，不能在 factory 中调用。这是因为 factory 不在组件顶层执行，不满足 hooks 的调用规则。
+
+---
+
 ## 与 Preact 互操作
 
 `defineComponent` 返回**标准 Preact 组件**，与 Preact 生态完全兼容：
 
 ```tsx
 import { defineComponent } from "trrn";
-import { Router } from "preact-iso";
-import { useRoute } from "preact-iso";
+import { Router, useRoute } from "preact-iso";
 
 // trrn 组件
 const Page = defineComponent(() => {
