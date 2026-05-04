@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "typescript-eslint/unbound-method": "off",
+    "typescript-eslint/no-base-to-string": "off"
+  }
+}

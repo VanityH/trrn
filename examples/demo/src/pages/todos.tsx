@@ -38,7 +38,9 @@ export function TodosPage(_: unknown, { update }: Ctx) {
       <div style="display: flex; gap: 8px; margin-bottom: 16px;">
         <input
           value={text}
-          onInput={(e: any) => { text = e.target.value; }}
+          onInput={(e: any) => {
+            text = e.target.value;
+          }}
           onKeyDown={(e: any) => e.key === "Enter" && add()}
           placeholder="Add a todo..."
           style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1;"
@@ -55,7 +57,10 @@ export function TodosPage(_: unknown, { update }: Ctx) {
         {(["all", "active", "done"] as const).map((f) => (
           <button
             key={f}
-            onClick={() => { filter = f; update(); }}
+            onClick={() => {
+              filter = f;
+              update();
+            }}
             style={{
               padding: "4px 12px",
               background: filter === f ? "#6366f1" : "#eee",

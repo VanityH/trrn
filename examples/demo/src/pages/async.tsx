@@ -16,7 +16,9 @@ export function AsyncPage(_: unknown, { update, onMount, onUnmount }: Ctx) {
   let errorMsg = "";
   let fetchId = 1;
 
-  onUnmount(() => { fetchId = -1; });
+  onUnmount(() => {
+    fetchId = -1;
+  });
 
   const load = () => {
     status = "loading";

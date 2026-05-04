@@ -8,7 +8,10 @@ function Timer(
   let timer: ReturnType<typeof setInterval> | null = null;
 
   onMount(() => {
-    timer = setInterval(() => { seconds++; update(); }, 1000);
+    timer = setInterval(() => {
+      seconds++;
+      update();
+    }, 1000);
   });
   onUnmount(() => {
     if (timer) clearInterval(timer);
@@ -34,12 +37,14 @@ export function LifecyclePage(_: unknown, { update }: Ctx) {
     <div>
       <h2>Lifecycle</h2>
       <p style="color: #666; font-size: 14px;">
-        onMount (start interval) + onUnmount (clear interval) + conditional
-        mount/unmount.
+        onMount (start interval) + onUnmount (clear interval) + conditional mount/unmount.
       </p>
 
       <button
-        onClick={() => { timers = [...timers, nextId++]; update(); }}
+        onClick={() => {
+          timers = [...timers, nextId++];
+          update();
+        }}
         style="padding: 6px 16px; cursor: pointer; margin: 12px 0;"
       >
         Add Timer
@@ -50,7 +55,10 @@ export function LifecyclePage(_: unknown, { update }: Ctx) {
         <Timer
           key={id}
           id={id}
-          onRemove={(id) => { timers = timers.filter((t) => t !== id); update(); }}
+          onRemove={(id) => {
+            timers = timers.filter((t) => t !== id);
+            update();
+          }}
         />
       ))}
     </div>

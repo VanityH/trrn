@@ -18,12 +18,17 @@ export function BoundaryPage(_: unknown, { update }: Ctx) {
     <div>
       <h2>Error Boundary</h2>
       <p style="color: #666; font-size: 14px;">
-        ErrorBoundary catches render errors, shows fallback UI, reset()
-        re-mounts.
+        ErrorBoundary catches render errors, shows fallback UI, reset() re-mounts.
       </p>
 
       <div style="display: flex; gap: 8px; margin: 16px 0;">
-        <button onClick={() => { showError = !showError; update(); }} style="padding: 6px 16px; cursor: pointer;">
+        <button
+          onClick={() => {
+            showError = !showError;
+            update();
+          }}
+          style="padding: 6px 16px; cursor: pointer;"
+        >
           {showError ? "Hide" : "Show"} Exploding
         </button>
       </div>
@@ -34,7 +39,10 @@ export function BoundaryPage(_: unknown, { update }: Ctx) {
             <div style="padding: 16px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px;">
               <p style="color: #dc2626; font-weight: bold;">Error Caught</p>
               <p style="color: #666; font-size: 14px;">{err.message}</p>
-              <button onClick={reset} style="padding: 6px 16px; background: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;">
+              <button
+                onClick={reset}
+                style="padding: 6px 16px; background: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px;"
+              >
                 Reset
               </button>
             </div>

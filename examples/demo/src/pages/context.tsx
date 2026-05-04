@@ -4,10 +4,7 @@ import { createContext } from "trrn";
 const ThemeCtx = createContext("light");
 const LangCtx = createContext("en");
 
-function ThemeBlock(
-  { label }: { label: string },
-  { consume }: Ctx,
-) {
+function ThemeBlock({ label }: { label: string }, { consume }: Ctx) {
   return () => (
     <div
       style={{
@@ -20,8 +17,12 @@ function ThemeBlock(
       }}
     >
       <p>{label}</p>
-      <p>theme: <strong>{consume(ThemeCtx)}</strong></p>
-      <p>lang: <strong>{consume(LangCtx)}</strong></p>
+      <p>
+        theme: <strong>{consume(ThemeCtx)}</strong>
+      </p>
+      <p>
+        lang: <strong>{consume(LangCtx)}</strong>
+      </p>
     </div>
   );
 }
@@ -38,10 +39,22 @@ export function ContextPage(_: unknown, { update }: Ctx) {
       </p>
 
       <div style="display: flex; gap: 12px; margin: 16px 0;">
-        <button onClick={() => { outerTheme = outerTheme === "light" ? "dark" : "light"; update(); }} style="padding: 6px 16px; cursor: pointer;">
+        <button
+          onClick={() => {
+            outerTheme = outerTheme === "light" ? "dark" : "light";
+            update();
+          }}
+          style="padding: 6px 16px; cursor: pointer;"
+        >
           Outer: {outerTheme}
         </button>
-        <button onClick={() => { innerTheme = innerTheme === "light" ? "dark" : "light"; update(); }} style="padding: 6px 16px; cursor: pointer;">
+        <button
+          onClick={() => {
+            innerTheme = innerTheme === "light" ? "dark" : "light";
+            update();
+          }}
+          style="padding: 6px 16px; cursor: pointer;"
+        >
           Inner: {innerTheme}
         </button>
       </div>
