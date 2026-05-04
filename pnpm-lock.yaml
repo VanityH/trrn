@@ -44,7 +44,7 @@ importers:
         specifier: ^0.1.14
         version: 0.1.19(@types/node@25.6.0)(jiti@2.6.1)(jsdom@29.1.0)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(jiti@2.6.1)(yaml@2.8.3))(yaml@2.8.3)
 
-  examples/demo:
+  example:
     dependencies:
       preact:
         specifier: 11.0.0-beta.1
@@ -61,7 +61,7 @@ importers:
     devDependencies:
       trrn:
         specifier: 'workspace:'
-        version: link:../..
+        version: link:..
       typescript:
         specifier: ~6.0.2
         version: 6.0.3
