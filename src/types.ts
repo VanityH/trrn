@@ -14,14 +14,9 @@ export interface Ctx {
 // ── RenderFn ─────────────────────────────────────────────────
 
 /** render 函数：每次渲染时调用，返回 VNode */
-export type RenderFn<P = Record<string, unknown>> = (
-  props: P,
-) => ComponentChildren;
+export type RenderFn<P = Record<string, unknown>> = (props: P) => ComponentChildren;
 
 // ── ComponentFn: defineComponent 的参数类型 ──────────────────
 
 /** 组件工厂函数：外层执行一次（持有状态），返回 render 函数 */
-export type ComponentFn<P = Record<string, unknown>> = (
-  props: P,
-  ctx: Ctx,
-) => RenderFn<P>;
+export type ComponentFn<P = Record<string, unknown>> = (props: P, ctx: Ctx) => RenderFn<P>;

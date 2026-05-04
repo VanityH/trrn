@@ -1,5 +1,5 @@
 /**
- * Phase 9: API 集成测试（action, 边界情况等）
+ * Phase 9: API 集成测试（边界情况等）
  */
 import { expect, test } from "vite-plus/test";
 import { render, h } from "preact";
@@ -13,9 +13,9 @@ function makeContainer(): HTMLElement {
   return el;
 }
 
-// ── action() 在复杂场景 ──────────────────────────────────────
+// ── 表单 + 输入组合 ──────────────────────────────────────────
 
-test("action() 用于表单提交 + 输入组合", async () => {
+test("表单提交 + 输入组合", async () => {
   const container = makeContainer();
 
   const Form = defineComponent((_props, ctx) => {
@@ -33,7 +33,16 @@ test("action() 用于表单提交 + 输入组合", async () => {
             name = (e.target as HTMLInputElement).value;
           },
         }),
-        h("button", { onClick: () => { submitted = name; ctx.update(); } }, "Submit"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              submitted = name;
+              ctx.update();
+            },
+          },
+          "Submit",
+        ),
       );
   });
 

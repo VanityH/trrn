@@ -1,15 +1,14 @@
 /**
- * Phase 5: 事件处理 + action() 辅助函数
+ * Phase 5: 事件处理
  *
  * 验证点：
  * 1. onClick, onInput, onSubmit 事件
- * 2. action() 自动调用 ctx.update()
- * 3. DOM ref 访问
+ * 2. DOM ref 访问
  */
 
 import { expect, test } from "vite-plus/test";
 import { render, h } from "preact";
-import { defineComponent, action } from "../src/index.ts";
+import { defineComponent } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
@@ -124,9 +123,9 @@ test("onSubmit 事件：表单提交处理", async () => {
   container.remove();
 });
 
-// ─── Test 4: action() 辅助函数 ───────────────────────────────
+// ─── Test 4: 手动 update() ──────────────────────────────────────
 
-test("action() 包装事件处理器，执行后自动更新", async () => {
+test("onClick 中手动 update() 触发重渲染", async () => {
   const container = makeContainer();
 
   const Counter = defineComponent((_props, ctx) => {
@@ -135,9 +134,10 @@ test("action() 包装事件处理器，执行后自动更新", async () => {
       h(
         "button",
         {
-          onClick: action(ctx, () => {
+          onClick: () => {
             count++;
-          }),
+            ctx.update();
+          },
         },
         String(count),
       );
@@ -157,9 +157,9 @@ test("action() 包装事件处理器，执行后自动更新", async () => {
   container.remove();
 });
 
-// ─── Test 5: action() 处理多个状态变更 ──────────────────────
+// ─── Test 5: 多状态变更后 update() ──────────────────────────
 
-test("action() 在一次事件中修改多个变量然后统一更新", async () => {
+test("一次事件中修改多个变量后手动 update()", async () => {
   const container = makeContainer();
 
   const Comp = defineComponent((_props, ctx) => {
@@ -170,7 +170,17 @@ test("action() 在一次事件中修改多个变量然后统一更新", async ()
         "div",
         null,
         h("span", { class: "sum" }, String(a + b)),
-        h("button", { onClick: action(ctx, () => { a++; b += 2; }) }, "inc"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              a++;
+              b += 2;
+              ctx.update();
+            },
+          },
+          "inc",
+        ),
       );
   });
 

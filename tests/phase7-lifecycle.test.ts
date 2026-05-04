@@ -1,10 +1,10 @@
 /**
- * Phase 7: action() + ctx.onMount() / ctx.onUnmount() 测试
+ * Phase 7: ctx.onMount() / ctx.onUnmount() 测试
  * 注：Preact useEffect 通过 RAF + setTimeout(35ms) 调度，测试需等待 >50ms
  */
 import { expect, test, vi } from "vite-plus/test";
 import { render, h } from "preact";
-import { defineComponent, action } from "../src/index.ts";
+import { defineComponent } from "../src/index.ts";
 
 const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 const waitEffects = () => new Promise<void>((r) => setTimeout(r, 60));
@@ -15,9 +15,9 @@ function makeContainer(): HTMLElement {
   return el;
 }
 
-// ── action() tests ────────────────────────────────────────────
+// ── 事件中 update() ───────────────────────────────────────────
 
-test("action(ctx, fn) 执行后自动调用 ctx.update()", async () => {
+test("事件中手动调用 ctx.update() 触发重渲染", async () => {
   const container = makeContainer();
 
   const Comp = defineComponent((_props, ctx) => {
@@ -26,9 +26,10 @@ test("action(ctx, fn) 执行后自动调用 ctx.update()", async () => {
       h(
         "button",
         {
-          onClick: action(ctx, () => {
+          onClick: () => {
             count++;
-          }),
+            ctx.update();
+          },
         },
         String(count),
       );
@@ -43,7 +44,7 @@ test("action(ctx, fn) 执行后自动调用 ctx.update()", async () => {
   container.remove();
 });
 
-test("action(ctx, fn) 转发事件参数", async () => {
+test("事件处理器参数转发", async () => {
   const container = makeContainer();
   let captured: any;
 
@@ -52,9 +53,10 @@ test("action(ctx, fn) 转发事件参数", async () => {
       h(
         "button",
         {
-          onClick: action(ctx, (e: MouseEvent) => {
+          onClick: (e: MouseEvent) => {
             captured = e.type;
-          }),
+            ctx.update();
+          },
         },
         "click",
       );
@@ -67,7 +69,7 @@ test("action(ctx, fn) 转发事件参数", async () => {
   container.remove();
 });
 
-test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
+test("修改多个状态后手动 update()", async () => {
   const container = makeContainer();
 
   const Comp = defineComponent((_props, ctx) => {
@@ -78,7 +80,17 @@ test("action(ctx, fn) 在修改多个状态后一次更新", async () => {
         "div",
         null,
         h("span", null, String(a + b)),
-        h("button", { onClick: action(ctx, () => { a++; b += 2; }) }, "inc"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              a++;
+              b += 2;
+              ctx.update();
+            },
+          },
+          "inc",
+        ),
       );
   });
 

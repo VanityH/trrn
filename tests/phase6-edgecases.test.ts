@@ -68,7 +68,16 @@ test("条件渲染：null / VNode 之间切换", async () => {
         "div",
         null,
         visible ? h("span", { class: "content" }, "visible") : null,
-        h("button", { onClick: () => { visible = !visible; ctx.update(); } }, "toggle"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              visible = !visible;
+              ctx.update();
+            },
+          },
+          "toggle",
+        ),
       );
   });
 
@@ -131,13 +140,19 @@ test("动态列表使用 key 保证元素复用", async () => {
           null,
           items.map((item) => h("li", { key: item.id }, item.text)),
         ),
-        h("button", { onClick: () => {
-          items = [
-            { id: 2, text: "second" },
-            { id: 3, text: "third" },
-          ];
-          ctx.update();
-        } }, "shuffle"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              items = [
+                { id: 2, text: "second" },
+                { id: 3, text: "third" },
+              ];
+              ctx.update();
+            },
+          },
+          "shuffle",
+        ),
       );
   });
 
@@ -193,7 +208,16 @@ test("子组件被条件移除后不再渲染", async () => {
         "div",
         null,
         show ? h(Child, null) : null,
-        h("button", { onClick: () => { show = !show; ctx.update(); } }, "toggle"),
+        h(
+          "button",
+          {
+            onClick: () => {
+              show = !show;
+              ctx.update();
+            },
+          },
+          "toggle",
+        ),
       );
   });
 

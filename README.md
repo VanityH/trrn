@@ -11,7 +11,14 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
   return () => (
     <div>
       <span>{count}</span>
-      <button onClick={() => { count++; update(); }}>+</button>
+      <button
+        onClick={() => {
+          count++;
+          update();
+        }}
+      >
+        +
+      </button>
     </div>
   );
 });
@@ -111,7 +118,10 @@ const Timer = defineComponent((_, { onMount, onUnmount, update }) => {
   let timerId: ReturnType<typeof setInterval>;
 
   onMount(() => {
-    timerId = setInterval(() => { seconds++; update(); }, 1000);
+    timerId = setInterval(() => {
+      seconds++;
+      update();
+    }, 1000);
   });
   onUnmount(() => clearInterval(timerId));
 
@@ -136,9 +146,19 @@ const TodoList = defineComponent((_, { update }) => {
 
   return () => (
     <div>
-      <input value={input} onInput={(e) => { input = (e.target as HTMLInputElement).value; update(); }} />
+      <input
+        value={input}
+        onInput={(e) => {
+          input = (e.target as HTMLInputElement).value;
+          update();
+        }}
+      />
       <button onClick={addItem}>添加</button>
-      <ul>{items.map((item) => <li key={item.id}>{item.text}</li>)}</ul>
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>{item.text}</li>
+        ))}
+      </ul>
     </div>
   );
 });
@@ -157,7 +177,12 @@ const Parent = defineComponent((_, { update }) => {
   let value = "";
   return () => (
     <div>
-      <input onInput={(e) => { value = (e.target as HTMLInputElement).value; update(); }} />
+      <input
+        onInput={(e) => {
+          value = (e.target as HTMLInputElement).value;
+          update();
+        }}
+      />
       <Child label={value} />
     </div>
   );
@@ -169,22 +194,27 @@ const Parent = defineComponent((_, { update }) => {
 复杂交互场景推荐将状态提升到父组件管理，子组件通过回调通知父组件：
 
 ```tsx
-const KanbanColumn = defineComponent(({ collapsed, onToggle }: {
-  collapsed: boolean;
-  onToggle: () => void;
-}) => {
-  return (p) => (
-    <div>
-      <button onClick={p.onToggle}>{p.collapsed ? "展开" : "折叠"}</button>
-      {!p.collapsed && <div>内容</div>}
-    </div>
-  );
-});
+const KanbanColumn = defineComponent(
+  ({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) => {
+    return (p) => (
+      <div>
+        <button onClick={p.onToggle}>{p.collapsed ? "展开" : "折叠"}</button>
+        {!p.collapsed && <div>内容</div>}
+      </div>
+    );
+  },
+);
 
 const Board = defineComponent((_, { update }) => {
   let collapsed = false;
   return () => (
-    <KanbanColumn collapsed={collapsed} onToggle={() => { collapsed = !collapsed; update(); }} />
+    <KanbanColumn
+      collapsed={collapsed}
+      onToggle={() => {
+        collapsed = !collapsed;
+        update();
+      }}
+    />
   );
 });
 ```
@@ -218,22 +248,6 @@ defineComponent(({ page = 1 }) => {
   return (p) => <button onClick={() => update({ page: 2 })}>第 {p.page} 页</button>;
 });
 ```
-
-### action() 包装器
-
-自动在事件处理器执行后调用 `ctx.update()`，减少样板代码：
-
-```tsx
-import { action } from "trrn";
-
-// 不用 action
-<button onClick={() => { count++; update(); }} />
-
-// 用 action
-<button onClick={action(ctx, () => { count++; })} />
-```
-
-`action()` 使用 try-finally 确保即使处理器抛出异常也会触发 update。
 
 ---
 
@@ -282,7 +296,10 @@ DOM 挂载后执行一次，适合做数据请求、DOM 操作、注册定时器
 
 ```tsx
 onMount(() => {
-  fetchData().then((result) => { data = result; update(); });
+  fetchData().then((result) => {
+    data = result;
+    update();
+  });
 });
 ```
 
@@ -301,9 +318,15 @@ onUnmount(() => {
 
 ```tsx
 const Comp = defineComponent((_, { onMount, onUnmount }) => {
-  onMount(() => { /* 初始化 A */ });
-  onUnmount(() => { /* 清理 A */ });
-  onUnmount(() => { /* 清理 B */ });
+  onMount(() => {
+    /* 初始化 A */
+  });
+  onUnmount(() => {
+    /* 清理 A */
+  });
+  onUnmount(() => {
+    /* 清理 B */
+  });
 });
 ```
 
@@ -350,11 +373,10 @@ const App = defineComponent(() => {
 
 ### 导出
 
-| 导出 | 说明 |
-|------|------|
+| 导出                       | 说明                                 |
+| -------------------------- | ------------------------------------ |
 | `defineComponent(factory)` | 定义 trrn 组件，返回标准 Preact 组件 |
-| `action(ctx, fn)` | 事件包装器，执行后自动 `update()` |
-| `ErrorBoundary` | 错误边界（Preact class 组件） |
+| `ErrorBoundary`            | 错误边界（Preact class 组件）        |
 
 ### Ctx 接口
 
@@ -371,11 +393,11 @@ interface Ctx {
 
 ### 类型
 
-| 类型 | 说明 |
-|------|------|
-| `Ctx` | 组件上下文（update / onMount / onUnmount） |
-| `RenderFn<P>` | `(props: P) => ComponentChildren` |
-| `ComponentFn<P>` | `(props: P, ctx: Ctx) => RenderFn<P>` |
+| 类型             | 说明                                       |
+| ---------------- | ------------------------------------------ |
+| `Ctx`            | 组件上下文（update / onMount / onUnmount） |
+| `RenderFn<P>`    | `(props: P) => ComponentChildren`          |
+| `ComponentFn<P>` | `(props: P, ctx: Ctx) => RenderFn<P>`      |
 
 ### ErrorBoundary
 
@@ -391,7 +413,7 @@ import { ErrorBoundary } from "trrn";
   )}
 >
   <RiskyComponent />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ---

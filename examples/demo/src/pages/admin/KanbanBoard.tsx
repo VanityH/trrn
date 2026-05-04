@@ -1,5 +1,4 @@
-import { defineComponent, action } from "trrn";
-import type { Ctx } from "trrn";
+import { defineComponent } from "trrn";
 import type { Task } from "../../mock/types.ts";
 import { fetchTasks } from "../../mock/api.ts";
 
@@ -214,7 +213,7 @@ const KanbanColumn = defineComponent<KanbanColumnProps>(() => {
 
 // ── KanbanBoardPage (父组件，持有全部状态) ──
 
-export const KanbanBoardPage = defineComponent<object>((_, { update, onMount }: Ctx) => {
+export const KanbanBoardPage = defineComponent<object>((_, { update, onMount }) => {
   let tasks: Task[] = [];
   let columns: Record<ColumnId, ColumnState> = {
     todo: { collapsed: false, sortBy: "created" },
@@ -223,21 +222,24 @@ export const KanbanBoardPage = defineComponent<object>((_, { update, onMount }: 
   };
   let expandedCards = new Set<number>();
 
-  const handleToggleCollapse = action({ update } as Ctx, (id: ColumnId) => {
+  const handleToggleCollapse = (id: ColumnId) => {
     columns[id] = { ...columns[id], collapsed: !columns[id].collapsed };
-  });
+    update();
+  };
 
-  const handleToggleSort = action({ update } as Ctx, (id: ColumnId, sort: SortKey) => {
+  const handleToggleSort = (id: ColumnId, sort: SortKey) => {
     columns[id] = { ...columns[id], sortBy: sort };
-  });
+    update();
+  };
 
-  const handleToggleExpand = action({ update } as Ctx, (taskId: number) => {
+  const handleToggleExpand = (taskId: number) => {
     if (expandedCards.has(taskId)) {
       expandedCards.delete(taskId);
     } else {
       expandedCards.add(taskId);
     }
-  });
+    update();
+  };
 
   onMount(() => {
     void fetchTasks().then((result) => {

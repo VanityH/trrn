@@ -1,10 +1,9 @@
-import { defineComponent, action } from "trrn";
-import type { Ctx } from "trrn";
+import { defineComponent } from "trrn";
 import { Card } from "../../components/ui/Card.tsx";
 import { fetchAnalytics } from "../../mock/api.ts";
 import type { AnalyticsData } from "../../mock/types.ts";
 
-export const AnalyticsPage = defineComponent<object>((_, { update, onMount, onUnmount }: Ctx) => {
+export const AnalyticsPage = defineComponent<object>((_, { update, onMount, onUnmount }) => {
   let data: AnalyticsData | null = null;
   let loading = true;
   let error: string | null = null;
@@ -47,7 +46,7 @@ export const AnalyticsPage = defineComponent<object>((_, { update, onMount, onUn
     clearInterval(intervalId.current);
   });
 
-  const handleRefresh = action({ update } as Ctx, () => {
+  const handleRefresh = () => {
     loading = true;
     update();
     void fetchAnalytics().then((result) => {
@@ -55,7 +54,7 @@ export const AnalyticsPage = defineComponent<object>((_, { update, onMount, onUn
       loading = false;
       update();
     });
-  });
+  };
 
   return () => {
     const cols = [
