@@ -1,5 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(vp pack *)", "Bash(vp build *)"]
-  }
-}
