@@ -399,7 +399,7 @@ const { div, button, span } = createVanity(h);
 const Counter = defineComponent(() => {
   return () => {
     const [count, setCount] = useState(0);
-    return div(span(count), button({ onClick: () => setCount((n) => n + 1) }, "+"));
+    return div(button.onClick(() => setCount((n) => n + 1))("+"), span(count));
   };
 });
 ```
