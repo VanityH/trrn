@@ -4,11 +4,11 @@ import type { ComponentChildren } from "preact";
 
 export interface Ctx {
   /** 触发重渲染，可选传入新的 props 合并到当前 props */
-  update(newProps?: Record<string, unknown>): void;
+  update(this: void, newProps?: Record<string, unknown>): void;
   /** 注册 DOM 挂载后回调（可访问 DOM） */
-  onMount(fn: () => void): void;
+  onMount(this: void, fn: () => void): void;
   /** 注册卸载时的清理回调 */
-  onUnmount(fn: () => void): void;
+  onUnmount(this: void, fn: () => void): void;
 }
 
 // ── RenderFn ─────────────────────────────────────────────────
