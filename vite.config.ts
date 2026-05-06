@@ -2,11 +2,10 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   pack: {
-    dts: {
-      tsgo: true,
-    },
+    dts: true,
     platform: "neutral",
     exports: true,
+    deps: { skipNodeModulesBundle: true },
   },
   lint: {
     options: {
