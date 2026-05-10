@@ -2,6 +2,7 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   pack: {
+    entry: ["src/index.ts", "src/react/index.ts"],
     dts: true,
     platform: "neutral",
     exports: true,

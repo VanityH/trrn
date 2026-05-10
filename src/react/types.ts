@@ -1,4 +1,4 @@
-import type { ReactNode } from "preact/compat";
+import type { ReactNode } from "react";
 
 // ── Ctx: 组件上下文 ──────────────────────────────────────────
 
