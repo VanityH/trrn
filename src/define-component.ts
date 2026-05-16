@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ReactNode } from "preact/compat";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import type { Ctx, ComponentFn } from "./types.ts";
 
 /**
