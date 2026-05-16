@@ -1,7 +1,7 @@
 {
   "name": "trrn-h",
   "version": "0.2.0",
-  "description": "Closure-based Preact component wrapper. No useState, no hooks — just functions and closures.",
+  "description": "Closure-based React component wrapper. No useState, no hooks — just functions and closures.",
   "keywords": [
     "closure",
     "components",

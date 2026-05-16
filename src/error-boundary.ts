@@ -10,7 +10,7 @@ export interface ErrorBoundaryProps {
 // ── ErrorBoundary ─────────────────────────────────────────────
 
 /**
- * 错误边界组件（Preact class component）。
+ * 错误边界组件
  * 捕获子组件渲染错误，显示 fallback UI。
  * reset() 可重新挂载出错的子树。
  *
