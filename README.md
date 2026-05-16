@@ -125,6 +125,8 @@ const DataList = defineComponent((_, { update, onMount }) => {
     return <div className={theme}>{filtered}</div>;
   };
 });
+```
+
 ---
 
 ## SSR
@@ -146,4 +148,3 @@ const DataList = defineComponent((_, { update, onMount }) => {
 ## License
 
 MIT
-```
