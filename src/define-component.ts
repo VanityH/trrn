@@ -24,35 +24,28 @@ export function defineComponent<P extends object = Record<string, unknown>>(
 ): (props: P) => ReactNode {
   return function TrrnComponent(props: P) {
     const [, tick] = useState(0);
-    const propsRef = useRef<P>(props);
-    const internalRef = useRef(false);
     const renderFnRef = useRef<((props: P) => ReactNode) | null>(null);
     const mountQueue = useRef<Array<() => void>>([]);
     const cleanupQueue = useRef<Array<() => void>>([]);
     const aliveRef = useRef(true);
 
-    // 父组件重渲染 → internalRef=false → 用父级新 props 覆盖
-    // ctx.update() 触发的 → internalRef=true → 跳过覆盖
-    if (!internalRef.current) {
-      propsRef.current = props;
+    const ctxRef = useRef<Ctx>(null!);
+    if (!ctxRef.current) {
+      ctxRef.current = {
+        update() {
+          if (!aliveRef.current) return;
+          tick((n) => n + 1);
+        },
+        onMount(fn: () => void) {
+          mountQueue.current.push(fn);
+        },
+        onUnmount(fn: () => void) {
+          cleanupQueue.current.push(fn);
+        },
+      };
     }
-    internalRef.current = false;
 
-    const ctxRef = useRef<Ctx>({
-      update() {
-        if (!aliveRef.current) return;
-        internalRef.current = true;
-        tick((n) => n + 1);
-      },
-      onMount(fn: () => void) {
-        mountQueue.current.push(fn);
-      },
-      onUnmount(fn: () => void) {
-        cleanupQueue.current.push(fn);
-      },
-    });
-
-    // 外层函数只执行一次
+    // 工厂函数只执行一次
     if (!renderFnRef.current) {
       renderFnRef.current = factory(props, ctxRef.current);
     }
@@ -71,6 +64,6 @@ export function defineComponent<P extends object = Record<string, unknown>>(
       };
     }, []);
 
-    return renderFnRef.current(propsRef.current);
+    return renderFnRef.current(props);
   };
 }
