@@ -1,6 +1,6 @@
 {
   "name": "trrn-h",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Closure-based React component wrapper. Closures instead of useState, update() instead of setState.",
   "keywords": [
     "closure",
