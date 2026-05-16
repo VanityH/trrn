@@ -1,5 +1,4 @@
 packages:
-  - example
   - vite-project
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.20

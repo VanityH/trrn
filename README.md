@@ -1,6 +1,6 @@
 # trrn-h
 
-**Preact 闭包组件包装器** — 用闭包变量替代 hooks。实验性项目。
+**React 闭包组件包装器** — 用闭包变量替代 hooks。实验性项目。
 
 ```tsx
 import { defineComponent } from "trrn-h";
@@ -35,8 +35,7 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 - [组件模式](#组件模式)
 - [更新机制](#更新机制)
 - [生命周期](#生命周期)
-- [Render 函数中的 Preact hooks](#render-函数中的-preact-hooks)
-- [与 Preact 互操作](#与-preact-互操作)
+- [Render 函数中的 React hooks](#render-函数中的-react-hooks)
 - [生态集成](#生态集成)
 - [API 参考](#api-参考)
 - [常见陷阱](#常见陷阱)
@@ -52,14 +51,14 @@ defineComponent((props, ctx) => {
   // ┌─ 工厂函数 ──────────────────────────┐
   // │ 只执行一次                           │
   // │ 闭包变量 = 组件状态                  │
-  // │ 注册生命周期回调                     │
+  │ 注册生命周期回调                     │
   // └──────────────────────────────────────┘
 
   return (props) => {
     // ┌─ render 函数 ──────────────────────┐
     // │ 每次渲染执行                        │
-    // │ props 始终是最新值                  │
-    // │ 可使用 Preact hooks                 │
+    │ props 始终是最新值                  │
+    // │ 可使用 React hooks                 │
     // │ 返回 VNode                          │
     // └─────────────────────────────────────┘
   };
@@ -68,16 +67,16 @@ defineComponent((props, ctx) => {
 
 - 外层闭包变量就是组件的"状态"——无需 `useState`
 - 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`、无隐式依赖追踪
-- `defineComponent` 返回**标准 Preact 组件**——与 Preact 生态 100% 互操作
+- `defineComponent` 返回**标准 React 组件**——与 React 生态 100% 互操作
 
-trrn-h 本身不做渲染、不做路由、不做状态管理——这些全部交给 Preact。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
+trrn-h 本身不做渲染、不做路由、不做状态管理——这些全部交给 React。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
 
 ---
 
 ## 安装
 
 ```bash
-npm install trrn-h preact
+npm install trrn-h
 ```
 
 ### tsconfig.json
@@ -85,24 +84,27 @@ npm install trrn-h preact
 ```json
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsx": "react-jsx"
   }
 }
 ```
 
-使用 Preact 的 JSX 运行时，trrn-h 组件是标准 Preact 组件，直接使用 Preact 的 JSX 转换。
+trrn-h 组件是标准 React 组件，使用 React 的 JSX 运行时。
 
 ### 入口
 
 ```tsx
-import { render, h } from "preact";
+import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";
 
-render(h(App, null), document.getElementById("app")!);
+createRoot(document.getElementById("app")!).render(<App />);
 ```
 
-> trrn-h 不提供 `render` 和 `h`——直接使用 Preact 原生 API。
+> trrn-h 不提供 `render`——直接使用 `react-dom` 原生 API。
+
+### 在 Preact 项目中使用
+
+如需在 Preact 项目中使用 trrn-h，请配置 Preact 的兼容层（如 `@preact/preset-vite`），它会将 `react` 和 `react-dom` 的引用自动映射到 `preact/compat`，无需修改任何代码。
 
 ---
 
@@ -301,9 +303,9 @@ const Comp = defineComponent((_, { onMount, onUnmount }) => {
 
 ---
 
-## Render 函数中的 Preact hooks
+## Render 函数中的 React hooks
 
-trrn-h 组件是标准 Preact 组件，render 函数在渲染时执行，因此其中可以调用所有 Preact hooks。
+trrn-h 组件是标准 React 组件，render 函数在渲染时执行，因此其中可以调用所有 React hooks。
 
 ```tsx
 const Comp = defineComponent(() => {
@@ -319,45 +321,9 @@ const Comp = defineComponent(() => {
 
 ---
 
-## 与 Preact 互操作
-
-`defineComponent` 返回**标准 Preact 组件**，与 Preact 生态完全兼容：
-
-```tsx
-import { defineComponent } from "trrn-h";
-import { Router, useRoute } from "preact-iso";
-
-// trrn-h 组件
-const Page = defineComponent(() => {
-  return () => <div>Hello</div>;
-});
-
-// Preact hooks 组件
-function Sidebar() {
-  const { path } = useRoute();
-  return <nav>{path}</nav>;
-}
-
-// 混用，无差别
-const App = defineComponent(() => {
-  return () => (
-    <Router>
-      <Page path="/" />
-      <Sidebar path="/sidebar" />
-    </Router>
-  );
-});
-```
-
-- 可直接使用 Preact hooks（`useState`、`useEffect` 等）——但既然用了 trrn-h 就不需要了
-- 可直接使用 Preact Context、错误边界、Suspense
-- 第三方 Preact 库无需任何适配层
-
----
-
 ## 生态集成
 
-trrn-h 组件是标准 Preact 组件，render 函数开放所有 Preact hooks，因此可以与多数生态库配合使用。
+trrn-h 组件是标准 React 组件，render 函数开放所有 React hooks，因此可以与多数生态库配合使用。
 
 ### Zustand — 全局状态管理
 
@@ -391,7 +357,7 @@ store 在组件外定义，不受组件生命周期影响。`subscribe` + `updat
 替代 `h(tag, props, children)` 嵌套写法：
 
 ```tsx
-import { h } from "preact";
+import { h } from "react-dom";
 import createVanity from "vanity-h";
 
 const { div, button, span } = createVanity(h);
@@ -404,7 +370,7 @@ const Counter = defineComponent(() => {
 });
 ```
 
-vanity-h 仅 186 字节，支持 Preact、React、Vue 等任何 hyperscript 兼容框架。
+vanity-h 仅 186 字节，支持 React、Preact、Vue 等任何 hyperscript 兼容框架。
 
 ---
 
@@ -412,10 +378,10 @@ vanity-h 仅 186 字节，支持 Preact、React、Vue 等任何 hyperscript 兼�
 
 ### 导出
 
-| 导出                       | 说明                                 |
-| -------------------------- | ------------------------------------ |
-| `defineComponent(factory)` | 定义 trrn-h 组件，返回标准 Preact 组件 |
-| `ErrorBoundary`            | 错误边界（Preact class 组件）        |
+| 导出                       | 说明                                  |
+| -------------------------- | ------------------------------------- |
+| `defineComponent(factory)` | 定义 trrn-h 组件，返回标准 React 组件 |
+| `ErrorBoundary`            | 错误边界（React class 组件）          |
 
 ### Ctx 接口
 
@@ -435,7 +401,7 @@ interface Ctx {
 | 类型             | 说明                                       |
 | ---------------- | ------------------------------------------ |
 | `Ctx`            | 组件上下文（update / onMount / onUnmount） |
-| `RenderFn<P>`    | `(props: P) => ComponentChildren`          |
+| `RenderFn<P>`    | `(props: P) => ReactNode`                  |
 | `ComponentFn<P>` | `(props: P, ctx: Ctx) => RenderFn<P>`      |
 
 ### ErrorBoundary

@@ -7,7 +7,6 @@
     "components",
     "functional",
     "hooks-free",
-    "preact",
     "react",
     "state management",
     "ui"
@@ -29,7 +28,6 @@
   "sideEffects": false,
   "exports": {
     ".": "./dist/index.js",
-    "./react": "./dist/react/index.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {
