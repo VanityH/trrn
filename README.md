@@ -71,6 +71,8 @@ const Comp = defineComponent(({ label }: { label: string }) => {
 
 ```bash
 npm install trrn-h
+# 或
+pnpm add trrn-h
 ```
 
 ```json
@@ -123,17 +125,6 @@ const DataList = defineComponent((_, { update, onMount }) => {
     return <div className={theme}>{filtered}</div>;
   };
 });
-```
-
-```tsx
-// ErrorBoundary
-import { ErrorBoundary } from "trrn-h";
-
-<ErrorBoundary fallback={(err, reset) => <button onClick={reset}>重试</button>}>
-  <RiskyComponent />
-</ErrorBoundary>;
-```
-
 ---
 
 ## SSR
@@ -155,3 +146,4 @@ import { ErrorBoundary } from "trrn-h";
 ## License
 
 MIT
+```

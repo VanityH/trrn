@@ -1,5 +1,4 @@
-packages:
-  - vite-project
+packages: []
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.20
   vite-plus: ^0.1.20
