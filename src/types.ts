@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 // ── Ctx: 组件上下文 ──────────────────────────────────────────
 
 export interface Ctx {
-  /** 触发重渲染，可选传入新的 props 合并到当前 props */
-  update(this: void, newProps?: Record<string, unknown>): void;
+  /** 触发重渲染 */
+  update(this: void): void;
   /** 注册 DOM 挂载后回调（可访问 DOM） */
   onMount(this: void, fn: () => void): void;
   /** 注册卸载时的清理回调 */

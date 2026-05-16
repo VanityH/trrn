@@ -39,12 +39,9 @@ export function defineComponent<P extends object = Record<string, unknown>>(
     internalRef.current = false;
 
     const ctxRef = useRef<Ctx>({
-      update(newProps?: Record<string, unknown>) {
+      update() {
         if (!aliveRef.current) return;
         internalRef.current = true;
-        if (newProps !== undefined) {
-          propsRef.current = { ...propsRef.current, ...newProps } as P;
-        }
         tick((n) => n + 1);
       },
       onMount(fn: () => void) {

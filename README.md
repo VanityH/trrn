@@ -1,6 +1,6 @@
 # trrn-h
 
-**React 闭包组件包装器** — 用闭包变量替代 hooks。实验性项目。
+**React 闭包组件包装器** — 用闭包变量管理状态，同时完整保留 hooks 能力。实验性项目。
 
 ```tsx
 import { defineComponent } from "trrn-h";
@@ -36,6 +36,7 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 - [更新机制](#更新机制)
 - [生命周期](#生命周期)
 - [Render 函数中的 React hooks](#render-函数中的-react-hooks)
+- [SSR 兼容性](#ssr-兼容性)
 - [生态集成](#生态集成)
 - [API 参考](#api-参考)
 - [常见陷阱](#常见陷阱)
@@ -44,32 +45,48 @@ const Counter = defineComponent(({ initial = 0 }, { update }) => {
 
 ## 概念
 
-**闭包就是状态。**
+**闭包就是状态。hooks 仍是 hooks。二者共存。**
 
 ```
 defineComponent((props, ctx) => {
   // ┌─ 工厂函数 ──────────────────────────┐
   // │ 只执行一次                           │
   // │ 闭包变量 = 组件状态                  │
-  │ 注册生命周期回调                     │
+  // │ 注册生命周期回调                     │
   // └──────────────────────────────────────┘
 
   return (props) => {
     // ┌─ render 函数 ──────────────────────┐
     // │ 每次渲染执行                        │
-    │ props 始终是最新值                  │
-    // │ 可使用 React hooks                 │
+    // │ props 始终是最新值                  │
+    // │ 可使用 React hooks                  │
     // │ 返回 VNode                          │
     // └─────────────────────────────────────┘
   };
 });
 ```
 
-- 外层闭包变量就是组件的"状态"——无需 `useState`
-- 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`、无隐式依赖追踪
+- **工厂函数**只执行一次，闭包变量充当组件状态——无需 `useState`
+- **Render 函数**每次渲染执行，可以调用 `useContext`、`useMemo` 等 React hooks
+- 修改闭包变量后调用 **`ctx.update()`** 触发重渲染——无需 `setState`
 - `defineComponent` 返回**标准 React 组件**——与 React 生态 100% 互操作
 
-trrn-h 本身不做渲染、不做路由、不做状态管理——这些全部交给 React。它只是把 `useState` 换成了闭包变量，把 `setState` 换成了 `update()`。
+```tsx
+// 闭包管理状态 + hooks 处理上下文和性能优化，自由组合
+const Comp = defineComponent((_, { update, onMount }) => {
+  let data = null;
+
+  onMount(async () => {
+    data = await fetchData();
+    update();
+  });
+
+  return () => {
+    const theme = useContext(ThemeCtx); // hook 在此处使用
+    return <div className={theme}>{data}</div>;
+  };
+});
+```
 
 ---
 
@@ -197,33 +214,30 @@ const Parent = defineComponent((_, { update }) => {
 });
 ```
 
-### 状态提升
+### hooks 与闭包联用
 
-复杂交互场景推荐将状态提升到父组件管理，子组件通过回调通知父组件：
+在 render 函数中使用 hooks 处理副作用，工厂函数中用闭包保存可变数据：
 
 ```tsx
-const KanbanColumn = defineComponent(
-  ({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) => {
-    return (p) => (
-      <div>
-        <button onClick={p.onToggle}>{p.collapsed ? "展开" : "折叠"}</button>
-        {!p.collapsed && <div>内容</div>}
-      </div>
-    );
-  },
-);
+const DataList = defineComponent((_, { update }) => {
+  let items = [];
 
-const Board = defineComponent((_, { update }) => {
-  let collapsed = false;
-  return () => (
-    <KanbanColumn
-      collapsed={collapsed}
-      onToggle={() => {
-        collapsed = !collapsed;
-        update();
-      }}
-    />
-  );
+  return () => {
+    // render 函数中可使用任意 React hooks
+    const search = useSearchParams();
+    const filtered = useMemo(
+      () => items.filter((i) => i.name.includes(search.get("q") || "")),
+      [search, items],
+    );
+
+    return (
+      <ul>
+        {filtered.map((i) => (
+          <li key={i.id}>{i.name}</li>
+        ))}
+      </ul>
+    );
+  };
 });
 ```
 
@@ -246,16 +260,6 @@ let count = 0;
 ```
 
 **任何需要反映在 UI 上的闭包变量变更，后面必须跟 `ctx.update()`。**
-
-### ctx.update(newProps)
-
-合并新 props 到当前 props，常用于组件内部覆盖传入的 props：
-
-```tsx
-defineComponent(({ page = 1 }) => {
-  return (p) => <button onClick={() => update({ page: 2 })}>第 {p.page} 页</button>;
-});
-```
 
 ---
 
@@ -305,19 +309,50 @@ const Comp = defineComponent((_, { onMount, onUnmount }) => {
 
 ## Render 函数中的 React hooks
 
-trrn-h 组件是标准 React 组件，render 函数在渲染时执行，因此其中可以调用所有 React hooks。
+trrn-h 组件是标准 React 组件。render 函数在渲染时执行，其中**可以调用所有 React hooks**：
 
 ```tsx
 const Comp = defineComponent(() => {
+  // 工厂函数中不可使用 hooks（不在组件顶层）
+  let state = null;
+
   return () => {
-    const theme = useContext(ThemeCtx); // Context
-    const items = useMemo(() => heavy(), [deps]); // 性能优化
-    return <div>{theme}</div>;
+    // render 函数中可使用 hooks
+    const theme = useContext(ThemeCtx);
+    const items = useMemo(() => expensive(state), [state]);
+    const ref = useRef(null);
+    return <div ref={ref}>{items}</div>;
   };
 });
 ```
 
-> hooks 只能在 render 函数中调用，不能在 factory 中调用。这是因为 factory 不在组件顶层执行，不满足 hooks 的调用规则。
+> hooks **只能在 render 函数**中调用，不能在 factory 中调用。这是因为 factory 不在组件顶层执行，不满足 hooks 的调用规则。闭包变量和 hooks 是互补关系——按需选用，各取所长。
+
+---
+
+## SSR 兼容性
+
+trrn-h 基于 React 标准 API（`useState` / `useRef` / `useEffect`），天然支持服务端渲染。
+
+需要注意的点：
+
+- **`onMount` 回调在 SSR 期间不会执行**——它基于 `useEffect`，在服务端被静默跳过。如果在 `onMount` 中执行了 DOM 操作或浏览器 API，SSR 产物不会包含这些逻辑。hydrate 后 `onMount` 会自动执行。
+- **`onUnmount` 类似地只在客户端组件卸载时触发**。
+- **`update()` 在 SSR 期间可以安全调用**——但因为服务端没有重渲染通道，调用不会产生效果，组件仍会渲染初始状态。
+
+```tsx
+const SafeComponent = defineComponent((_, { onMount, onUnmount, update }) => {
+  let isClient = false;
+
+  onMount(() => {
+    isClient = true; // 仅在客户端 true
+  });
+
+  return () => <div>{isClient ? "客户端渲染" : "服务端渲染"}</div>;
+});
+```
+
+这符合 React SSR 的行为预期——`onMount` 在 hydrate 后执行，不会导致 SSR 产物与服务端不匹配。
 
 ---
 
@@ -387,8 +422,8 @@ vanity-h 仅 186 字节，支持 React、Preact、Vue 等任何 hyperscript 兼�
 
 ```ts
 interface Ctx {
-  /** 触发重渲染。可选传入 newProps 合并到当前 props */
-  update(newProps?: Record<string, unknown>): void;
+  /** 触发重渲染 */
+  update(): void;
   /** DOM 挂载后回调 */
   onMount(fn: () => void): void;
   /** 卸载时清理回调（支持多次调用） */

@@ -1,12 +1,12 @@
 {
   "name": "trrn-h",
   "version": "0.2.0",
-  "description": "Closure-based React component wrapper. No useState, no hooks — just functions and closures.",
+  "description": "Closure-based React component wrapper. Closures instead of useState, update() instead of setState.",
   "keywords": [
     "closure",
     "components",
     "functional",
-    "hooks-free",
+    "hooks",
     "react",
     "state management",
     "ui"
