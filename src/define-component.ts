@@ -27,13 +27,11 @@ export function defineComponent<P extends object = Record<string, unknown>>(
     const renderFnRef = useRef<((props: P) => ReactNode) | null>(null);
     const mountQueue = useRef<Array<() => void>>([]);
     const cleanupQueue = useRef<Array<() => void>>([]);
-    const aliveRef = useRef(true);
 
     const ctxRef = useRef<Ctx>(null!);
     if (!ctxRef.current) {
       ctxRef.current = {
         update() {
-          if (!aliveRef.current) return;
           tick((n) => n + 1);
         },
         onMount(fn: () => void) {
@@ -59,7 +57,6 @@ export function defineComponent<P extends object = Record<string, unknown>>(
     // 卸载时执行 onUnmount 回调
     useEffect(() => {
       return () => {
-        aliveRef.current = false;
         for (const fn of cleanupQueue.current) fn();
       };
     }, []);
