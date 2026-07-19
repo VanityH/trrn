@@ -1,6 +1,6 @@
 {
   "name": "trrn-h",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Closure-based React component wrapper. Closures instead of useState, update() instead of setState.",
   "keywords": [
     "closure",
@@ -11,15 +11,15 @@
     "state management",
     "ui"
   ],
-  "homepage": "https://github.com/VanityH/trrn#readme",
+  "homepage": "https://github.com/Himavanta/trrn-h#readme",
   "bugs": {
-    "url": "https://github.com/VanityH/trrn/issues"
+    "url": "https://github.com/Himavanta/trrn-h/issues"
   },
   "license": "MIT",
   "author": "Himavanta@foxmail.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VanityH/trrn.git"
+    "url": "git+https://github.com/Himavanta/trrn-h.git"
   },
   "files": [
     "dist"
